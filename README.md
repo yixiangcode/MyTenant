@@ -1,4 +1,4 @@
-# MyTenantApplication
+# MyTenant Application
 
 Tenant and Asset Management System
 

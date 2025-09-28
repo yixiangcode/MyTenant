@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:tenant/pages/manage_tenant_page.dart';
+import 'login_page.dart';
 import 'property_page.dart';
+import 'manage_tenant_page.dart';
 
 class LandlordPage extends StatelessWidget {
   final List<Map<String, dynamic>> menuItems = [
@@ -60,6 +63,11 @@ class LandlordPage extends StatelessWidget {
                   );
                   break;
                 case "Manage Tenant":
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ManageTenantPage(ownerId: "123")),
+                  );
+                  break;
                 // TODO: Navigate to tenant screen
                   break;
                 case "Chat":
@@ -72,7 +80,10 @@ class LandlordPage extends StatelessWidget {
                 // TODO: Navigate to notification screen
                   break;
                 case "Logout":
-                // TODO: Handle logout logic
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                  );
                   break;
               }
             }

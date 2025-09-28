@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:tenant/pages/maintenance_page.dart';
 import 'property_page.dart';
+import 'scanner_page.dart';
+import 'maintenance_page.dart';
+import 'login_page.dart';
 
 class TenantPage extends StatelessWidget {
   final List<Map<String, dynamic>> menuItems = [
     {
       "title": "Upload Document",
       "icon": Icons.upload_file,
-      "page": const PropertyPage(ownerId: "123"),
+      "page": ScannerPage(),
     },
     {
       "title": "View Document",
@@ -16,7 +20,7 @@ class TenantPage extends StatelessWidget {
     {
       "title": "Report Problem",
       "icon": Icons.build_circle,
-      "page": null,
+      "page": MaintenancePage(),
     },
     {
       "title": "Owing Records",
@@ -31,7 +35,7 @@ class TenantPage extends StatelessWidget {
     {
       "title": "Logout",
       "icon": Icons.logout,
-      "page": null,
+      "page": LoginPage(),
     },
   ];
 

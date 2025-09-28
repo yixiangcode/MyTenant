@@ -17,7 +17,11 @@ class LoginPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.home_work, size: 100, color: Colors.indigo),
+              Image.asset(
+                'images/logo.png',
+                width: 100,
+                height: 100,
+              ),
               SizedBox(height: 20),
               Text(
                 "Welcome to MyTenant",
@@ -63,11 +67,17 @@ class LoginPage extends StatelessWidget {
               // Login Button
               ElevatedButton(
                 onPressed: () {
-                  // 跳转到 Home Page
-                  Navigator.pushReplacement( //push
-                    context,
-                    MaterialPageRoute(builder: (context) => LandlordPage()), // 改这里！！！！！
-                  );
+                  if(emailCtrl.text.trim() == "tenant"){
+                    Navigator.pushReplacement( //push
+                      context,
+                      MaterialPageRoute(builder: (context) => TenantPage()),
+                    );
+                  }else if(emailCtrl.text.trim() == "landlord"){
+                    Navigator.pushReplacement( //push
+                      context,
+                      MaterialPageRoute(builder: (context) => LandlordPage()),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 60, vertical: 16),
