@@ -60,7 +60,12 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("My Tenants")),
+      appBar: AppBar(
+        title: const Text('Tenants', style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.indigo,
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: showAddDialog,
         child: Icon(Icons.add),

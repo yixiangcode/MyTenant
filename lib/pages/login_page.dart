@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'tenant_page.dart';
 import 'landlord_page.dart';
 import 'register_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class LoginPage extends StatelessWidget {
   final TextEditingController emailCtrl = TextEditingController();
@@ -19,8 +22,8 @@ class LoginPage extends StatelessWidget {
             children: [
               Image.asset(
                 'images/logo.png',
-                width: 100,
-                height: 100,
+                width: 120,
+                height: 120,
               ),
               SizedBox(height: 20),
               Text(
@@ -66,17 +69,30 @@ class LoginPage extends StatelessWidget {
 
               // Login Button
               ElevatedButton(
-                onPressed: () {
-                  if(emailCtrl.text.trim() == "tenant"){
-                    Navigator.pushReplacement( //push
+                onPressed: () async{
+
+                  if(emailCtrl.text.trim() == "tenant" || emailCtrl.text.trim() == "t"){
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => TenantPage()),
                     );
-                  }else if(emailCtrl.text.trim() == "landlord"){
-                    Navigator.pushReplacement( //push
+                  }else if(emailCtrl.text.trim() == "landlord" || emailCtrl.text.trim() == "l"){
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => LandlordPage()),
                     );
+                  }
+
+                  try{
+                    var userRegistered = await _auth.signInWithEmailAndPassword(email: emailCtrl.text.trim(), password: passCtrl.text.trim());
+                    if (userRegistered != null){
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => TenantPage()),
+                      );
+                    }
+                  }catch (e){
+                    print(e);
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -91,7 +107,6 @@ class LoginPage extends StatelessWidget {
               SizedBox(height: 20),
               TextButton(
                 onPressed: () {
-                  // 点击后跳转到 RegisterScreen
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => RegisterPage()),

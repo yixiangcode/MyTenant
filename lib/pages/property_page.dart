@@ -60,7 +60,12 @@ class _PropertyPageState extends State<PropertyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("My Properties")),
+      appBar: AppBar(
+        title: const Text('Properties', style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.indigo,
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: showAddDialog,
         child: Icon(Icons.add),

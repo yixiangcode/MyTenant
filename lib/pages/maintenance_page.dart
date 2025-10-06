@@ -33,7 +33,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
     final List<ImageLabel> labels = await labeler.processImage(inputImage);
 
-    String detected = labels.isNotEmpty ? labels.first.label : "Unknown object";
+    String detected = labels.isNotEmpty ? labels.first.label : "Unknown";
 
     setState(() {
       result = detected;
@@ -45,7 +45,11 @@ class _MaintenancePageState extends State<MaintenancePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Detect Object")),
+      appBar: AppBar(
+        title: const Text('Asset Scanner', style: TextStyle(color: Colors.white),),
+        centerTitle: true,
+        backgroundColor: Colors.indigo,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -60,7 +64,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                 : Container(),
             SizedBox(height: 20),
             Text(
-              result.isEmpty ? "No result yet" : "Detected: $result",
+              result.isEmpty ? "No result" : "Detected: $result",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],

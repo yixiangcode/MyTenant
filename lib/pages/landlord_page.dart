@@ -36,9 +36,82 @@ class LandlordPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("MyTenant Admin Panel", style: TextStyle(color: Colors.white)),
+        iconTheme: IconThemeData(
+          color: Colors.white,
+        ),
+        title: Row(
+          children: [
+            Image.asset(
+              'images/logo_white.png',
+              height: 40,
+            ),
+            const SizedBox(width: 10),
+            const Text('MyTenant Admin Panel', style: TextStyle(color: Colors.white),),
+          ],
+        ),
+        //actions: [IconButton(onPressed: (){}, icon: const Icon(Icons.settings))],
         centerTitle: true,
         backgroundColor: Colors.indigo,
+      ),
+      endDrawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.indigo,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: AssetImage('images/logo.png'),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Welcome to MyTenant',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                  Text(
+                    'admin@yixiang.com',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              title: Text('Profile'),
+              onTap: () {
+                // Handle item tap
+              },
+            ),
+            ListTile(
+              title: Text('About'),
+              onTap: () {
+                // Handle item tap
+              },
+            ),
+            ListTile(
+              title: Text('Help'),
+              onTap: () {
+                // Handle item tap
+              },
+            ),
+            ListTile(
+              title: Text('Logout'),
+              onTap: () {
+                // Handle item tap
+              },
+            ),
+          ],
+        ),
       ),
       backgroundColor: Colors.grey[100],
       body: Padding(
@@ -80,9 +153,11 @@ class LandlordPage extends StatelessWidget {
                 // TODO: Navigate to notification screen
                   break;
                 case "Logout":
-                  Navigator.push(
+                  Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    MaterialPageRoute(
+                      builder: (context) => LoginPage(),
+                    ), (Route<dynamic> route) => false,
                   );
                   break;
               }

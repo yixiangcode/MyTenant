@@ -27,38 +27,63 @@ class _ScannerPageState extends State<ScannerPage> {
 
   Future<void> _processImage(File imageFile) async {
     final inputImage = InputImage.fromFile(imageFile);
-    final RecognizedText recognizedText =
-    await textRecognizer.processImage(inputImage);
+    final RecognizedText recognizedText = await textRecognizer.processImage(
+      inputImage,
+    );
 
     String text = recognizedText.text;
 
-    final amountRegex = RegExp(r'(RM)?\s?\d+(\.\d{2})?');
-    final dateRegex = RegExp(r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4})\b', caseSensitive: false);
+    final amountRegex = RegExp(r'RM\s?\d+(\.\d{2})?');
+    final dateRegex = RegExp(
+      r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{1,2}\s+[a-zA-Z]{3,4}\s+\d{4})\b',
+      caseSensitive: false,
+    );
+    final icRegex = RegExp(r'\b\d{6}-\d{2}-\d{4}\b', caseSensitive: false);
+    final addressRegex = RegExp(
+      r'(NO|LOT|UNIT)\s?\d+.*?(\s(JALAN|TAMAN|LORONG)\s+[A-Z\d\s]+)+',
+      caseSensitive: false,
+      dotAll: true,
+    );
+    final nameRegex = RegExp(r'\b[A-Z\s]{3}\b');
+    final nameRegexLine = RegExp(r'^([A-Z]+\s?){2,}$');
 
     String amount = amountRegex.firstMatch(text)?.group(0) ?? "Not found";
     String date = dateRegex.firstMatch(text)?.group(0) ?? "Not found";
+    String ic = icRegex.firstMatch(text)?.group(0) ?? "Not found";
+    String address = addressRegex.firstMatch(text)?.group(0) ?? "Not found";
+    String name = nameRegex.firstMatch(text)?.group(0) ?? "Not found";
+    String nameLine = nameRegexLine.firstMatch(text)?.group(0) ?? "Not found";
 
     setState(() {
-      _recognizedText = "Full Text:\n$text\n\nAmount: $amount\nDate: $date";
+      _recognizedText =
+          "Full Text:\n$text\n\n\nAmount: $amount\nDate: $date\nIC: $ic\nAddress: $address\nName: $name\nNameLine: $nameLine\n\n\n";
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Scanner")),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            if (_image != null) Image.file(_image!),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: Text("Scan Document"),
-            ),
-            SizedBox(height: 20),
-            Text(_recognizedText),
-          ],
+      appBar: AppBar(
+        title: const Text('Document Scanner', style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.indigo,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_image != null) Image.file(_image!),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: Text("Scan Document"),
+              ),
+              SizedBox(height: 20),
+              Text(_recognizedText),
+            ],
+          ),
         ),
       ),
     );

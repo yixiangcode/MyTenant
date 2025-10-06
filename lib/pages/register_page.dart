@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class RegisterPage extends StatelessWidget {
   final TextEditingController emailCtrl = TextEditingController();
@@ -23,7 +26,7 @@ class RegisterPage extends StatelessWidget {
               ),
               SizedBox(height: 30),
 
-              // Email Input
+
               TextField(
                 controller: emailCtrl,
                 decoration: InputDecoration(
@@ -40,7 +43,6 @@ class RegisterPage extends StatelessWidget {
               ),
               SizedBox(height: 16),
 
-              // Password Input
               TextField(
                 controller: passCtrl,
                 obscureText: true,
@@ -58,7 +60,6 @@ class RegisterPage extends StatelessWidget {
               ),
               SizedBox(height: 16),
 
-              // Confirm Password Input
               TextField(
                 controller: confirmPassCtrl,
                 obscureText: true,
@@ -78,10 +79,11 @@ class RegisterPage extends StatelessWidget {
 
               // Register Button
               ElevatedButton(
-                onPressed: () {
-                  // TODO: 实现注册逻辑，例如验证输入，发送到后端
-                  // 注册成功后可以返回登录页
-                  Navigator.pop(context);
+                onPressed: () async{
+                  var userRegistered = await _auth.createUserWithEmailAndPassword(email: emailCtrl.text.trim(), password: passCtrl.text.trim());
+                  if (userRegistered != null){
+                    Navigator.pop(context);
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 60, vertical: 16),
@@ -94,10 +96,10 @@ class RegisterPage extends StatelessWidget {
               ),
               SizedBox(height: 20),
 
-              // Back to Login Link
+
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // 返回上一个页面（即登录页）
+                  Navigator.pop(context);
                 },
                 child: Text(
                   "Already have an account? Login",
