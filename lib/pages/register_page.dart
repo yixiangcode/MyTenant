@@ -1,12 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => RegisterPageState();
+}
+
+class RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailCtrl = TextEditingController();
   final TextEditingController passCtrl = TextEditingController();
-  final TextEditingController confirmPassCtrl = TextEditingController();
+  final TextEditingController roleCtrl = TextEditingController();
+
+  String errorMessage = "";
+
+  Future<void> registerTenant(String uid) async {
+    if (emailCtrl.text.isEmpty || passCtrl.text.isEmpty || roleCtrl.text.isEmpty) return;
+
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'email': emailCtrl.text,
+      'name': '${roleCtrl.text}101',
+      'contactNumber': 'Unknown',
+      'role': roleCtrl.text,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    emailCtrl.clear();
+    passCtrl.clear();
+    roleCtrl.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +87,10 @@ class RegisterPage extends StatelessWidget {
               SizedBox(height: 16),
 
               TextField(
-                controller: confirmPassCtrl,
-                obscureText: true,
+                controller: roleCtrl,
                 decoration: InputDecoration(
-                  hintText: "Confirm Password",
-                  prefixIcon: Icon(Icons.lock),
+                  hintText: "Role: Tenant/Landlord",
+                  prefixIcon: Icon(Icons.people),
                   filled: true,
                   fillColor: Colors.white,
                   contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -77,12 +102,35 @@ class RegisterPage extends StatelessWidget {
               ),
               SizedBox(height: 30),
 
+              if (errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    errorMessage,
+                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              SizedBox(height: 20),
+
               // Register Button
               ElevatedButton(
                 onPressed: () async{
-                  var userRegistered = await _auth.createUserWithEmailAndPassword(email: emailCtrl.text.trim(), password: passCtrl.text.trim());
-                  if (userRegistered != null){
-                    Navigator.pop(context);
+                  try{
+                    final userRegistered = await _auth.createUserWithEmailAndPassword(email: emailCtrl.text.trim(), password: passCtrl.text.trim());
+                    final uid = userRegistered.user?.uid;
+
+                    if (uid != null){
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Register Successful")),
+                      );
+                      registerTenant(uid);
+                      Navigator.pop(context);
+                    }
+                  }catch(e){
+                    setState(() {
+                      errorMessage = e.toString();
+                    });
                   }
                 },
                 style: ElevatedButton.styleFrom(

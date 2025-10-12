@@ -1,39 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:tenant/pages/manage_tenant_page.dart';
 import 'login_page.dart';
 import 'property_page.dart';
 import 'manage_tenant_page.dart';
+import 'profile_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LandlordPage extends StatelessWidget {
-  final List<Map<String, dynamic>> menuItems = [
-    {
-      "title": "Manage Tenant",
-      "icon": Icons.people,
-    },
-    {
-      "title": "Manage Property",
-      "icon": Icons.home_work,
-    },
-    {
-      "title": "Chat",
-      "icon": Icons.mark_unread_chat_alt,
-    },
-    {
-      "title": "Income",
-      "icon": Icons.attach_money,
-    },
-    {
-      "title": "Notifications",
-      "icon": Icons.notifications,
-    },
-    {
-      "title": "Logout",
-      "icon": Icons.logout,
-    },
-  ];
+  const LandlordPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+
+    final user = FirebaseAuth.instance.currentUser;
+    final uid = user?.uid;
+
+    Future<String?> getUserInformation() async {
+      DocumentSnapshot tenantInfo = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+      return tenantInfo.get('name') as String?;
+    }
+
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(
@@ -46,10 +35,9 @@ class LandlordPage extends StatelessWidget {
               height: 40,
             ),
             const SizedBox(width: 10),
-            const Text('MyTenant Admin Panel', style: TextStyle(color: Colors.white),),
+            const Text('MyTenant for Landlord', style: TextStyle(color: Colors.white),),
           ],
         ),
-        //actions: [IconButton(onPressed: (){}, icon: const Icon(Icons.settings))],
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
@@ -58,9 +46,7 @@ class LandlordPage extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.indigo,
-              ),
+              decoration: BoxDecoration(color: Colors.indigo),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -71,119 +57,307 @@ class LandlordPage extends StatelessWidget {
                   SizedBox(height: 10),
                   Text(
                     'Welcome to MyTenant',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                   Text(
                     'admin@yixiang.com',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
               ),
             ),
             ListTile(
+              leading: Icon(Icons.account_circle),
               title: Text('Profile'),
               onTap: () {
-                // Handle item tap
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
               },
             ),
             ListTile(
+              leading: Icon(Icons.info),
               title: Text('About'),
               onTap: () {
                 // Handle item tap
               },
             ),
             ListTile(
+              leading: Icon(Icons.help),
               title: Text('Help'),
               onTap: () {
                 // Handle item tap
               },
             ),
             ListTile(
+              leading: Icon(Icons.logout),
               title: Text('Logout'),
               onTap: () {
-                // Handle item tap
+                FirebaseAuth.instance.signOut();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                      (Route<dynamic> route) => false,
+                );
               },
             ),
           ],
         ),
       ),
       backgroundColor: Colors.grey[100],
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.builder(
-          itemCount: menuItems.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1,
-          ),
-          itemBuilder: (BuildContext context, int index) {
-            final item = menuItems[index];
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Card(
+                color: Colors.lightBlue[100],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 8,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ProfilePage()),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
 
-            void handleTap() {
-              switch (item['title']) {
-                case "Manage Property":
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => PropertyPage(ownerId: "123")),
-                  );
-                  break;
-                case "Manage Tenant":
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ManageTenantPage(ownerId: "123")),
-                  );
-                  break;
-                // TODO: Navigate to tenant screen
-                  break;
-                case "Chat":
-                // TODO: Navigate to chat screen
-                  break;
-                case "Income":
-                // TODO: Navigate to income screen
-                  break;
-                case "Notifications":
-                // TODO: Navigate to notification screen
-                  break;
-                case "Logout":
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LoginPage(),
-                    ), (Route<dynamic> route) => false,
-                  );
-                  break;
-              }
-            }
-
-            return Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 4,
-              child: InkWell(
-                onTap: handleTap,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(item['icon'], size: 40, color: Colors.indigo),
-                      SizedBox(height: 12),
-                      Text(item['title'],
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                    ],
+                        FutureBuilder<String?>(
+                          future: getUserInformation(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              // 数据加载中
+                              return const Center(child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              // 数据加载错误
+                              return Text(
+                                "Welcome to My Tenant\nDisplay Error",
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              );
+                            } else {
+                              final name = snapshot.data ?? 'Unknown';
+                              return Text(
+                                "Hi, $name\nIncome: RM 2000",
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            );
-          },
+
+              SizedBox(height: 20.0),
+
+              GridView.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1,
+
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+
+                children: [
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 8,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ManageTenantPage(ownerId: '123')),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.people,
+                              size: 50,
+                              color: Colors.indigo,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Manage Tenant",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 8,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => PropertyPage(ownerId: '123')),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.home_work, size: 50, color: Colors.indigo),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Manage Property",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 8,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ManageTenantPage(ownerId: '123')),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.mark_unread_chat_alt,
+                              size: 50,
+                              color: Colors.indigo,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Chat",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 8,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => PropertyPage(ownerId: '123')),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.attach_money,
+                              size: 50,
+                              color: Colors.indigo,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Income",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 8,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ManageTenantPage(ownerId: '123')),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.notifications,
+                              size: 50,
+                              color: Colors.indigo,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Notification",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
