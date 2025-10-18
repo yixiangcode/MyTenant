@@ -51,7 +51,7 @@ class TenantPage extends StatelessWidget {
                     tag: 'avatar',
                     child: CircleAvatar(
                       radius: 30,
-                      backgroundImage: AssetImage('images/logo.png'),
+                      backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/tenant-fyp.firebasestorage.app/o/assets%2FJohn.png?alt=media&token=22d7ea1f-03c7-4559-899a-29aa8626665f'),
                     ),
                   ),
                   SizedBox(height: 10),

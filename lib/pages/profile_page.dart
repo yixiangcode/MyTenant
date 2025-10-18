@@ -35,28 +35,12 @@ class ProfilePage extends StatelessWidget {
             Hero(
               tag: 'avatar',
               child: CircleAvatar(
-                backgroundImage: AssetImage('images/logo.png'),
+                backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/tenant-fyp.firebasestorage.app/o/assets%2FJohn.png?alt=media&token=22d7ea1f-03c7-4559-899a-29aa8626665f'),
                 radius: 70.0,
               ),
             ),
-            Text(
-              'Cheng Yi Xiang',
-              style: TextStyle(
-                fontFamily: 'Pacifico',
-                fontSize: 30.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              'Tenant',
-              style: TextStyle(
-                fontFamily: 'Source Sans Pro',
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
 
-            SizedBox(height: 20.0),
+            SizedBox(height: 30.0),
 
             FutureBuilder<Map<String, dynamic>?>(
               future: getUserInformation(),

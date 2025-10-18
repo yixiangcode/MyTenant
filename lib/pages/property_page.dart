@@ -32,16 +32,15 @@ class _PropertyPageState extends State<PropertyPage> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 10);
     if (pickedFile != null) {
-      // 注意：这里使用 setState 来更新 _selectedImage 变量
+
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
     }
   }
 
-  // **修改：集成图片上传和 Firestore 存储**
   Future<void> addAsset() async {
     if (nameCtrl.text.isEmpty || addressCtrl.text.isEmpty) return;
 
@@ -53,33 +52,29 @@ class _PropertyPageState extends State<PropertyPage> {
       return;
     }
 
-    // 关闭对话框
     Navigator.pop(context);
 
     setState(() {
-      _isAdding = true; // 开始加载
+      _isAdding = true;
     });
 
     String imageUrl = '';
 
     try {
-      // 1. 上传图片到 Firebase Storage
       String fileName = 'assets/${DateTime.now().millisecondsSinceEpoch}.jpg';
       Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
 
       await storageRef.putFile(_selectedImage!);
 
-      // 2. 获取图片的下载 URL
       imageUrl = await storageRef.getDownloadURL();
 
-      // 3. 将数据和图片 URL 存入 Firestore
       await FirebaseFirestore.instance.collection('assets').add({
         'ownerId': widget.ownerId,
         'name': nameCtrl.text,
         'address': addressCtrl.text,
         'rent': double.tryParse(rentCtrl.text) ?? 0,
         'note': noteCtrl.text,
-        'imageUrl': imageUrl, // <-- 存储 URL
+        'imageUrl': imageUrl,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
@@ -88,7 +83,7 @@ class _PropertyPageState extends State<PropertyPage> {
       addressCtrl.clear();
       rentCtrl.clear();
       noteCtrl.clear();
-      _selectedImage = null; // 清除图片
+      _selectedImage = null;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Property added successfully!')),
@@ -100,12 +95,11 @@ class _PropertyPageState extends State<PropertyPage> {
       );
     } finally {
       setState(() {
-        _isAdding = false; // 停止加载
+        _isAdding = false;
       });
     }
   }
 
-  // **修改：修复 setDialogState 和添加加载状态**
   void showAddDialog() {
     _selectedImage = null;
     nameCtrl.clear();
@@ -115,7 +109,7 @@ class _PropertyPageState extends State<PropertyPage> {
 
     showDialog(
       context: context,
-      // **必须**使用 StatefulBuilder 才能在 AlertDialog 内部更新 _selectedImage 的预览
+
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
@@ -126,7 +120,7 @@ class _PropertyPageState extends State<PropertyPage> {
                   InkWell(
                     onTap: () async {
                       await _pickImage();
-                      setDialogState(() {}); // 仅更新对话框内部的 UI
+                      setDialogState(() {});
                     },
                     child: Container(
                       height: 120,
@@ -161,7 +155,7 @@ class _PropertyPageState extends State<PropertyPage> {
         },
       ),
     ).then((_) {
-      // 无论对话框如何关闭，都重置 _selectedImage
+
       setState(() {
         _selectedImage = null;
       });
@@ -180,7 +174,7 @@ class _PropertyPageState extends State<PropertyPage> {
         onPressed: showAddDialog,
         child: const Icon(Icons.add),
       ),
-      // **添加全局加载状态显示**
+
       body: _isAdding
           ? const Center(child: CircularProgressIndicator())
           : StreamBuilder<QuerySnapshot>(
@@ -200,12 +194,12 @@ class _PropertyPageState extends State<PropertyPage> {
             itemCount: assets.length,
             itemBuilder: (context, index) {
               final asset = assets[index];
-              final String imageUrl = asset['imageUrl'] as String? ?? ''; // <-- 获取图片 URL
+              final String imageUrl = asset['imageUrl'] as String? ?? '';
 
               return Card(
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
-                  // **修改：显示图片**
+
                   leading: imageUrl.isNotEmpty
                       ? Image.network(
                     imageUrl,
@@ -214,7 +208,7 @@ class _PropertyPageState extends State<PropertyPage> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),
                   )
-                      : const Icon(Icons.house, size: 40, color: Colors.indigo),
+                      : Image.asset('images/logo.png', height: 40),
 
                   title: Text(asset['name']),
                   subtitle: Text("${asset['address']}\nRent: RM ${asset['rent']}"),
