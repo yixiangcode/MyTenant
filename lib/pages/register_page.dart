@@ -14,24 +14,25 @@ class RegisterPage extends StatefulWidget {
 class RegisterPageState extends State<RegisterPage> {
   final TextEditingController emailCtrl = TextEditingController();
   final TextEditingController passCtrl = TextEditingController();
-  final TextEditingController roleCtrl = TextEditingController();
+
+  String? _selectedRole;
+  final List<String> _roleOptions = ['Tenant', 'Landlord'];
 
   String errorMessage = "";
 
   Future<void> registerTenant(String uid) async {
-    if (emailCtrl.text.isEmpty || passCtrl.text.isEmpty || roleCtrl.text.isEmpty) return;
+    if (emailCtrl.text.isEmpty || passCtrl.text.isEmpty) return;
 
     await FirebaseFirestore.instance.collection('users').doc(uid).set({
       'email': emailCtrl.text,
-      'name': '${roleCtrl.text}101',
+      'name': '${_selectedRole}101',
       'contactNumber': 'Unknown',
-      'role': roleCtrl.text,
+      'role': _selectedRole,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
     emailCtrl.clear();
     passCtrl.clear();
-    roleCtrl.clear();
   }
 
   @override
@@ -86,20 +87,34 @@ class RegisterPageState extends State<RegisterPage> {
               ),
               SizedBox(height: 16),
 
-              TextField(
-                controller: roleCtrl,
-                decoration: InputDecoration(
-                  hintText: "Role: Tenant/Landlord",
-                  prefixIcon: Icon(Icons.people),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: DropdownButtonFormField<String>(
+                  value: _selectedRole,
+                  decoration: InputDecoration(
+                    hintText: "Select Role: Tenant/Landlord",
+                    prefixIcon: Icon(Icons.people),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    border: InputBorder.none,
                   ),
+                  items: _roleOptions.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedRole = newValue;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a role' : null,
                 ),
               ),
+
               SizedBox(height: 30),
 
               if (errorMessage.isNotEmpty)

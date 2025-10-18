@@ -60,7 +60,7 @@ class TenantPage extends StatelessWidget {
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                   Text(
-                    'admin@yixiang.com',
+                    'admin@tenant.com',
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
