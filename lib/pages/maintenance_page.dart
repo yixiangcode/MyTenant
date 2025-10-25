@@ -50,13 +50,26 @@ class _MaintenancePageState extends State<MaintenancePage> {
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
+      backgroundColor: const Color(0xFFF2F4F7),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: detectObject,
-              child: Text("Scan Object"),
+            Card(
+              margin: const EdgeInsets.all(10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 8,
+              child: SizedBox(
+                height: 60.0,
+                child: ListTile(
+                  leading: Icon(Icons.view_in_ar, color: Colors.indigo,size: 50.0,),
+                  title: Text('  Scan Object',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),),
+                  trailing: Icon(Icons.chevron_right, color: Colors.indigo),
+                  onTap: detectObject,
+                ),
+              ),
             ),
             SizedBox(height: 20),
             pickedImage != null
@@ -64,7 +77,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                 : Container(),
             SizedBox(height: 20),
             Text(
-              result.isEmpty ? "No result" : "Detected: $result",
+              result.isEmpty ? "" : "Detected: $result",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],

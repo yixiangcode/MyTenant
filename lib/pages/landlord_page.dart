@@ -15,12 +15,12 @@ class LandlordPage extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     final uid = user?.uid;
 
-    Future<String?> getUserInformation() async {
-      DocumentSnapshot tenantInfo = await FirebaseFirestore.instance
+    Future<Map<String, dynamic>?> getUserInformation() async {
+      DocumentSnapshot userInfo = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .get();
-      return tenantInfo.get('name') as String?;
+      return userInfo.data() as Map<String, dynamic>?;
     }
 
     return Scaffold(
@@ -50,18 +50,51 @@ class LandlordPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundImage: AssetImage('images/logo.png'),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Welcome to MyTenant',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                  Text(
-                    'admin@landlord.com',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  FutureBuilder<Map<String, dynamic>?>(
+                    future: getUserInformation(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(
+                          width: double.infinity,
+                          child: Center(
+                            child: CircularProgressIndicator(), // Loading
+                          ),
+                        );
+                      }
+
+                      if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                        return const Text('Loading error');
+                      }
+
+                      final userData = snapshot.data!;
+                      final name = userData['name'] as String? ?? '-';
+                      final email = userData['email'] as String? ?? '-';
+                      final role = userData['role'] as String? ?? '-';
+                      final contactNumber = userData['contactNumber'] as String? ?? "-";
+                      final imageUrl = userData['imageUrl'] as String? ?? '';
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Hero(
+                            tag: 'avatar',
+                            child: CircleAvatar(
+                              radius: 30,
+                              backgroundImage: NetworkImage(imageUrl),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            name,
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                          Text(
+                            email,
+                            style: TextStyle(color: Colors.white70, fontSize: 14),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -105,7 +138,7 @@ class LandlordPage extends StatelessWidget {
           ],
         ),
       ),
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF2F4F7),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -132,7 +165,7 @@ class LandlordPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
 
-                        FutureBuilder<String?>(
+                        FutureBuilder<Map<String, dynamic>?>(
                           future: getUserInformation(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -148,14 +181,30 @@ class LandlordPage extends StatelessWidget {
                                 ),
                               );
                             } else {
-                              final name = snapshot.data ?? 'Unknown';
-                              return Text(
-                                "Hi, $name\nIncome: RM 2000",
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                textAlign: TextAlign.center,
+                              final userData = snapshot.data!;
+                              final name = userData['name'] as String? ?? '-';
+                              final imageUrl = userData['imageUrl'] as String? ?? '';
+                              return Row(
+                                children: [
+                                  Text(
+                                    "Hi, $name\nIncome: RM 3000",
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                  ),
+                                  Hero(
+                                    tag: 'avatar',
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: CircleAvatar(
+                                        backgroundImage: NetworkImage(imageUrl),
+                                        radius: 40.0,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               );
                             }
                           },

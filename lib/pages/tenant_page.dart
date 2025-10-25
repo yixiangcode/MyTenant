@@ -13,12 +13,12 @@ class TenantPage extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     final uid = user?.uid;
 
-    Future<String?> getUserInformation() async {
-      DocumentSnapshot tenantInfo = await FirebaseFirestore.instance
+    Future<Map<String, dynamic>?> getUserInformation() async {
+      DocumentSnapshot userInfo = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .get();
-      return tenantInfo.get('name') as String?;
+      return userInfo.data() as Map<String, dynamic>?;
     }
 
     return Scaffold(
@@ -47,21 +47,51 @@ class TenantPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Hero(
-                    tag: 'avatar',
-                    child: CircleAvatar(
-                      radius: 30,
-                      backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/tenant-fyp.firebasestorage.app/o/assets%2FJohn.png?alt=media&token=22d7ea1f-03c7-4559-899a-29aa8626665f'),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Welcome to MyTenant',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                  Text(
-                    'admin@tenant.com',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  FutureBuilder<Map<String, dynamic>?>(
+                    future: getUserInformation(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(
+                          width: double.infinity,
+                          child: Center(
+                            child: CircularProgressIndicator(), // Loading
+                          ),
+                        );
+                      }
+
+                      if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                        return const Text('Loading error');
+                      }
+
+                      final userData = snapshot.data!;
+                      final name = userData['name'] as String? ?? '-';
+                      final email = userData['email'] as String? ?? '-';
+                      final role = userData['role'] as String? ?? '-';
+                      final contactNumber = userData['contactNumber'] as String? ?? "-";
+                      final imageUrl = userData['imageUrl'] as String? ?? '';
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Hero(
+                            tag: 'avatar',
+                            child: CircleAvatar(
+                              radius: 30,
+                              backgroundImage: NetworkImage(imageUrl),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            name,
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                          Text(
+                            email,
+                            style: TextStyle(color: Colors.white70, fontSize: 14),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -111,7 +141,9 @@ class TenantPage extends StatelessWidget {
         ),
       ),
 
-      backgroundColor: Colors.grey[100],
+      //backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF2F4F7),
+
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -138,7 +170,7 @@ class TenantPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
 
-                        FutureBuilder<String?>(
+                        FutureBuilder<Map<String, dynamic>?>(
                           future: getUserInformation(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -154,15 +186,31 @@ class TenantPage extends StatelessWidget {
                                 ),
                               );
                             } else {
-                              // 数据加载成功
-                              final name = snapshot.data ?? 'No Name';
-                              return Text(
-                                "Hi, $name\nUpcoming Bill: RM 900\nDue Date: 11/11/2025",
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                textAlign: TextAlign.center,
+                              final userData = snapshot.data!;
+                              final name = userData['name'] as String? ?? '-';
+                              final imageUrl = userData['imageUrl'] as String? ?? '';
+
+                              return Row(
+                                children: [
+                                  Text(
+                                    "Hi, $name\nUnpaid Bill: RM 800\nDue Date: 12/12/2025",
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                  ),
+                                  Hero(
+                                    tag: 'avatar',
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: CircleAvatar(
+                                        backgroundImage: NetworkImage(imageUrl),
+                                        radius: 35.0,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               );
                             }
                           },
@@ -204,13 +252,13 @@ class TenantPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.upload_file,
+                              Icons.document_scanner,
                               size: 50,
                               color: Colors.indigo,
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              "Upload Document",
+                              "Scan Document",
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -272,7 +320,7 @@ class TenantPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.build_circle,
+                              Icons.handyman,
                               size: 50,
                               color: Colors.indigo,
                             ),
@@ -308,7 +356,7 @@ class TenantPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.attach_money,
+                              Icons.local_atm,
                               size: 50,
                               color: Colors.indigo,
                             ),

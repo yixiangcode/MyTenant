@@ -32,16 +32,6 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Hero(
-              tag: 'avatar',
-              child: CircleAvatar(
-                backgroundImage: NetworkImage('https://firebasestorage.googleapis.com/v0/b/tenant-fyp.firebasestorage.app/o/assets%2FJohn.png?alt=media&token=22d7ea1f-03c7-4559-899a-29aa8626665f'),
-                radius: 70.0,
-              ),
-            ),
-
-            SizedBox(height: 30.0),
-
             FutureBuilder<Map<String, dynamic>?>(
               future: getUserInformation(),
               builder: (context, snapshot) {
@@ -59,18 +49,38 @@ class ProfilePage extends StatelessWidget {
                 }
 
                 final userData = snapshot.data!;
-                final name = userData['name'] as String? ?? 'N/A';
-                final email = userData['email'] as String? ?? 'N/A';
-                final role = userData['role'] as String? ?? 'Unknown';
-                final contactNumber = userData['contactNumber'] as String? ?? "N/A";
+                final name = userData['name'] as String? ?? '-';
+                final ic = userData['ic'] as String? ?? '-';
+                final email = userData['email'] as String? ?? '-';
+                final role = userData['role'] as String? ?? '-';
+                final contactNumber = userData['contactNumber'] as String? ?? "-";
+                final imageUrl = userData['imageUrl'] as String? ?? '';
+
 
                 return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    Hero(
+                      tag: 'avatar',
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(imageUrl),
+                        radius: 70.0,
+                      ),
+                    ),
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontFamily: 'Pacifico',
+                        fontSize: 30.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 30.0),
+
                     Card(
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
-                        leading: Icon(Icons.badge, color: Colors.deepPurple),
+                        leading: Icon(Icons.account_box, color: Colors.deepPurple),
                         title: Text("Name", style: TextStyle(fontWeight: FontWeight.bold)),
                         trailing: Text(
                           name,
@@ -81,6 +91,19 @@ class ProfilePage extends StatelessWidget {
 
                     SizedBox(height: 8.0),
 
+                    Card(
+                      margin: EdgeInsets.symmetric(horizontal: 10.0),
+                      child: ListTile(
+                        leading: Icon(Icons.badge, color: Colors.deepPurple),
+                        title: Text("IC Number", style: TextStyle(fontWeight: FontWeight.bold)),
+                        trailing: Text(
+                          ic,
+                          style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 8.0),
                     Card(
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
@@ -98,7 +121,7 @@ class ProfilePage extends StatelessWidget {
                     Card(
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
-                        leading: Icon(Icons.person, color: Colors.deepPurple),
+                        leading: Icon(Icons.phone, color: Colors.deepPurple),
                         title: Text("Phone", style: TextStyle(fontWeight: FontWeight.bold)),
                         trailing: Text(
                           contactNumber,

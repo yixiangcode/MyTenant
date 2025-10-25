@@ -2,6 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ScannerPage extends StatefulWidget {
   @override
@@ -20,8 +23,6 @@ class _ScannerPageState extends State<ScannerPage> {
 
   final ImagePicker _picker = ImagePicker();
   final textRecognizer = TextRecognizer();
-
-  final TextEditingController icCtrl = TextEditingController();
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
@@ -57,22 +58,155 @@ class _ScannerPageState extends State<ScannerPage> {
     String name = nameRegex.firstMatch(text)?.group(0) ?? "";
 
     setState(() {
-      if (_documentType == 'Identity Card'){
+      if (_documentType == 'Identity Card') {
         _icText = ic;
-        _nameText = name.replaceAll('PENGENALAN', '');
+        if (name.contains('\n')) {
+          name = name.substring(0, name.indexOf('\n')).trim();
+        }
+        _nameText = name
+            .replaceAll('KAD', '')
+            .replaceAll('PENGENALAN', '')
+            .replaceAll('MALAYSIA', '');
         _addressText = address;
-      }else if(_documentType == 'Bill'){
+      } else if (_documentType == 'Bill') {
         _nameText = name;
         _dateText = date;
         _amountText = amount;
-      }else if(_documentType == 'Contract'){
+      } else if (_documentType == 'Contract') {
         _nameText = name;
         _icText = ic;
         _dateText = date;
       }
-      _fullText =
-          "Full Text:\n$text\n\n\n";
+      _fullText = "Full Text:\n$text\n\n\n";
     });
+  }
+
+  final TextEditingController nameCtrl = TextEditingController();
+  final TextEditingController addressCtrl = TextEditingController();
+  final TextEditingController icCtrl = TextEditingController();
+  final TextEditingController amountCtrl = TextEditingController();
+  final TextEditingController dateCtrl = TextEditingController();
+  bool _isEditing = false;
+
+  void showEditDialog() {
+    nameCtrl.text = _nameText;
+    addressCtrl.text = _addressText;
+    icCtrl.text = _icText;
+    amountCtrl.text = _amountText;
+    dateCtrl.text = _dateText;
+
+    final user = FirebaseAuth.instance.currentUser;
+    final uid = user?.uid;
+
+    showDialog(
+      context: context,
+
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text("Edit"),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  if (_nameText.isNotEmpty)...[
+                    TextField(
+                      controller: nameCtrl,
+                      decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                    ),
+                  const SizedBox(height: 15),
+                  ],
+
+                  if (_addressText.isNotEmpty)...[
+                    TextField(
+                      controller: addressCtrl,
+                      decoration: InputDecoration(labelText: "Address", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                      maxLines: 2,
+                      keyboardType: TextInputType.multiline,
+                    ),
+                  const SizedBox(height: 15),
+                  ],
+
+                  if (_icText.isNotEmpty)...[
+                    TextField(
+                      controller: icCtrl,
+                      decoration: InputDecoration(labelText: "IC Number", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                      keyboardType: TextInputType.number,
+                    ),
+                  const SizedBox(height: 15),
+                  ],
+
+                  if (_amountText.isNotEmpty)...[
+                    TextField(
+                      controller: amountCtrl,
+                      decoration: InputDecoration(labelText: "Amount", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                    ),
+                  const SizedBox(height: 15),
+                  ],
+
+                  if (_dateText.isNotEmpty)
+                    TextField(
+                      controller: dateCtrl,
+                      decoration: InputDecoration(labelText: "Date", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              // **添加加载状态显示**
+              _isEditing
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : ElevatedButton(
+                      onPressed: () async {
+                        if (uid == null) return;
+
+                        setDialogState(() {
+                          _isEditing = true;
+                        });
+
+                        await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(uid)
+                            .update({
+                              if (_nameText.isNotEmpty)
+                                'name': nameCtrl.text.trim(),
+                              if (_icText.isNotEmpty)
+                                'ic': icCtrl.text.trim(),
+                              if (_addressText.isNotEmpty)
+                                'address': addressCtrl.text.trim(),
+                              if (_dateText.isNotEmpty)
+                                'date': dateCtrl.text.trim(),
+                            });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile updated successfully!'),
+                          ),
+                        );
+
+                        Navigator.pop(context);
+
+                        setState(() {
+                          _isEditing = false;
+                          _nameText = nameCtrl.text.trim();
+                          _icText = icCtrl.text.trim();
+                          _addressText = addressCtrl.text.trim();
+                          _dateText = dateCtrl.text.trim();
+                        });
+                      },
+                      child: const Text("Save"),
+                    ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -86,6 +220,7 @@ class _ScannerPageState extends State<ScannerPage> {
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
+      backgroundColor: const Color(0xFFF2F4F7),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
@@ -97,32 +232,105 @@ class _ScannerPageState extends State<ScannerPage> {
               if (_fullText.isEmpty)
                 Column(
                   children: [
-                    ElevatedButton(
-                      onPressed: (){
-                        _documentType = 'Identity Card';
-                        _pickImage();
-                      },
-                      child: Text("Identity Card"),
+                    Card(
+                      margin: const EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 8,
+                      child: SizedBox(
+                        height: 60.0,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.badge,
+                            color: Colors.indigo,
+                            size: 50.0,
+                          ),
+                          title: Text(
+                            '  Identity Card',
+                            style: TextStyle(
+                              fontSize: 26,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: Colors.indigo,
+                          ),
+                          onTap: () {
+                            _documentType = 'Identity Card';
+                            _pickImage();
+                          },
+                        ),
+                      ),
                     ),
-                    SizedBox(height: 20),
 
-                    ElevatedButton(
-                      onPressed: (){
-                        _documentType = 'Contract';
-                        _pickImage();
-                      },
-                      child: Text("Contract"),
-                    ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                    ElevatedButton(
-                      onPressed: (){
-                        _documentType = 'Bill';
-                        _pickImage();
-                      },
-                      child: Text("Bill"),
+                    Card(
+                      margin: const EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 8,
+                      child: SizedBox(
+                        height: 60.0,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.description,
+                            color: Colors.indigo,
+                            size: 50.0,
+                          ),
+                          title: Text(
+                            '  Contract',
+                            style: TextStyle(
+                              fontSize: 26,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: Colors.indigo,
+                          ),
+                          onTap: () {
+                            _documentType = 'Contract';
+                            _pickImage();
+                          },
+                        ),
+                      ),
                     ),
-                    SizedBox(height: 20),
+
+                    const SizedBox(height: 20),
+
+                    Card(
+                      margin: const EdgeInsets.all(10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 8,
+                      child: SizedBox(
+                        height: 60.0,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.receipt_long,
+                            color: Colors.indigo,
+                            size: 50.0,
+                          ),
+                          title: Text(
+                            '  Bill',
+                            style: TextStyle(
+                              fontSize: 26,
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right,
+                            color: Colors.indigo,
+                          ),
+                          onTap: () {
+                            _documentType = 'Bill';
+                            _pickImage();
+                          },
+                        ),
+                      ),
+                    ),
                   ],
                 ),
 
@@ -133,10 +341,16 @@ class _ScannerPageState extends State<ScannerPage> {
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
                       leading: Icon(Icons.badge, color: Colors.deepPurple),
-                      title: Text('Name', style: TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        'Name',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       trailing: Text(
                         _nameText,
-                        style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0),
+                        style: TextStyle(
+                          color: Colors.deepPurpleAccent,
+                          fontSize: 15.0,
+                        ),
                       ),
                     ),
                   ),
@@ -149,10 +363,16 @@ class _ScannerPageState extends State<ScannerPage> {
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
                       leading: Icon(Icons.badge, color: Colors.deepPurple),
-                      title: Text('IC Number', style: TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        'IC Number',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       trailing: Text(
                         _icText,
-                        style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0),
+                        style: TextStyle(
+                          color: Colors.deepPurpleAccent,
+                          fontSize: 15.0,
+                        ),
                       ),
                     ),
                   ),
@@ -165,10 +385,16 @@ class _ScannerPageState extends State<ScannerPage> {
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
                       leading: Icon(Icons.badge, color: Colors.deepPurple),
-                      title: Text('Address', style: TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        'Address',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       trailing: Text(
                         _addressText,
-                        style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0),
+                        style: TextStyle(
+                          color: Colors.deepPurpleAccent,
+                          fontSize: 15.0,
+                        ),
                       ),
                     ),
                   ),
@@ -181,10 +407,16 @@ class _ScannerPageState extends State<ScannerPage> {
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
                       leading: Icon(Icons.badge, color: Colors.deepPurple),
-                      title: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        'Amount',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       trailing: Text(
                         _amountText,
-                        style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0),
+                        style: TextStyle(
+                          color: Colors.deepPurpleAccent,
+                          fontSize: 15.0,
+                        ),
                       ),
                     ),
                   ),
@@ -197,10 +429,16 @@ class _ScannerPageState extends State<ScannerPage> {
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
                       leading: Icon(Icons.badge, color: Colors.deepPurple),
-                      title: Text('Date', style: TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        'Date',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       trailing: Text(
                         _dateText,
-                        style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0),
+                        style: TextStyle(
+                          color: Colors.deepPurpleAccent,
+                          fontSize: 15.0,
+                        ),
                       ),
                     ),
                   ),
@@ -231,17 +469,15 @@ class _ScannerPageState extends State<ScannerPage> {
                           },
                         );
                       },
-                      child: const Text('Full Recognized Text'),
+                      child: const Text('Full Recognized Text (Testing Purpose)'),
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 10),
 
                     ElevatedButton(
-                      onPressed: (){
-                        Navigator.of(context).pop();
-                      },
-                      child: Text("Back"),
+                      onPressed: showEditDialog,
+                      child: Text("Edit"),
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 10),
                   ],
                 ),
 
