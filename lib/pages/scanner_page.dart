@@ -25,7 +25,7 @@ class _ScannerPageState extends State<ScannerPage> {
   final textRecognizer = TextRecognizer();
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera, imageQuality: 30);
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
@@ -57,25 +57,44 @@ class _ScannerPageState extends State<ScannerPage> {
     String address = addressRegex.firstMatch(text)?.group(0) ?? "";
     String name = nameRegex.firstMatch(text)?.group(0) ?? "";
 
+
     setState(() {
       if (_documentType == 'Identity Card') {
         _icText = ic;
-        if (name.contains('\n')) {
-          name = name.substring(0, name.indexOf('\n')).trim();
+        if (ic.isNotEmpty) {
+          int icStartIndex = text.indexOf(ic);
+          if (icStartIndex != -1) {
+            int searchStartIndex = icStartIndex + ic.length;
+            String subText = text.substring(searchStartIndex);
+            name = nameRegex.firstMatch(subText)?.group(0) ?? "";
+          }
+        } else {
+          name = nameRegex.firstMatch(text)?.group(0) ?? "";
         }
+
         _nameText = name
             .replaceAll('KAD', '')
             .replaceAll('PENGENALAN', '')
-            .replaceAll('MALAYSIA', '');
+            .replaceAll('MALAYSIA', '')
+            .replaceAll('NO', '')
+            .trim();
         _addressText = address;
       } else if (_documentType == 'Bill') {
-        _nameText = name;
         _dateText = date;
         _amountText = amount;
       } else if (_documentType == 'Contract') {
-        _nameText = name;
+        _nameText = name
+            .replaceAll('AND', '')
+            .replaceAll('THE', '')
+            .replaceAll('TENANT', '')
+            .replaceAll('LANDLORD', '')
+            .replaceAll('FOR', '')
+            .replaceAll('RENTAL', '')
+            .replaceAll('PREMISE', '')
+            .trim();
         _icText = ic;
         _dateText = date;
+        _addressText = address;
       }
       _fullText = "Full Text:\n$text\n\n\n";
     });
@@ -170,6 +189,63 @@ class _ScannerPageState extends State<ScannerPage> {
                           _isEditing = true;
                         });
 
+                        String fileName = 'assets/${DateTime.now().millisecondsSinceEpoch}.jpg';
+                        Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
+
+                        await storageRef.putFile(_image!);
+
+                        DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+                        String? icImageUrl;
+                        String? contractImageUrl;
+                        String? billImageUrl;
+
+                        if(_documentType == 'Identity Card'){
+                          String? oldIcImageUrl = userDoc.get('icImageUrl') as String?;
+
+                          icImageUrl = await storageRef.getDownloadURL();
+
+                          if (oldIcImageUrl != null && oldIcImageUrl.isNotEmpty) {
+                            try {
+                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldIcImageUrl);
+                              await oldRef.delete();
+                            } catch (e) {
+                              print('Error deleting old image: $e');
+                            }
+                          }
+                        }
+
+                        if(_documentType == "Contract"){
+                          String? oldContractImageUrl = userDoc.get('contractImageUrl') as String?;
+
+                          contractImageUrl = await storageRef.getDownloadURL();
+
+                          if (oldContractImageUrl != null && oldContractImageUrl.isNotEmpty) {
+                            try {
+                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldContractImageUrl);
+                              await oldRef.delete();
+                            } catch (e) {
+                              print('Error deleting old image: $e');
+                            }
+                          }
+                        }
+
+                        if(_documentType == "Bill"){
+                          String? oldBillImageUrl = userDoc.get('billImageUrl') as String?;
+
+                          billImageUrl = await storageRef.getDownloadURL();
+
+                          if (oldBillImageUrl != null && oldBillImageUrl.isNotEmpty) {
+                            try {
+                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldBillImageUrl);
+                              await oldRef.delete();
+                            } catch (e) {
+                              print('Error deleting old image: $e');
+                            }
+                          }
+                        }
+
+
                         await FirebaseFirestore.instance
                             .collection('users')
                             .doc(uid)
@@ -182,6 +258,12 @@ class _ScannerPageState extends State<ScannerPage> {
                                 'address': addressCtrl.text.trim(),
                               if (_dateText.isNotEmpty)
                                 'date': dateCtrl.text.trim(),
+                              if (_documentType == 'Identity Card')
+                                'icImageUrl': icImageUrl,
+                              if (_documentType == 'Contract')
+                                'contractImageUrl': contractImageUrl,
+                              if (_documentType == 'Bill')
+                                'billImageUrl': billImageUrl,
                             });
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -211,6 +293,10 @@ class _ScannerPageState extends State<ScannerPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    final user = FirebaseAuth.instance.currentUser;
+    final uid = user?.uid;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -233,7 +319,7 @@ class _ScannerPageState extends State<ScannerPage> {
                 Column(
                   children: [
                     Card(
-                      margin: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.all(25),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -247,7 +333,7 @@ class _ScannerPageState extends State<ScannerPage> {
                             size: 50.0,
                           ),
                           title: Text(
-                            '  Identity Card',
+                            ' Identity Card',
                             style: TextStyle(
                               fontSize: 26,
                             ),
@@ -264,10 +350,8 @@ class _ScannerPageState extends State<ScannerPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
-
                     Card(
-                      margin: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.all(25),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -281,7 +365,7 @@ class _ScannerPageState extends State<ScannerPage> {
                             size: 50.0,
                           ),
                           title: Text(
-                            '  Contract',
+                            ' Contract',
                             style: TextStyle(
                               fontSize: 26,
                             ),
@@ -298,10 +382,8 @@ class _ScannerPageState extends State<ScannerPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
-
                     Card(
-                      margin: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.all(25),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -315,7 +397,7 @@ class _ScannerPageState extends State<ScannerPage> {
                             size: 50.0,
                           ),
                           title: Text(
-                            '  Bill',
+                            ' Bill',
                             style: TextStyle(
                               fontSize: 26,
                             ),
@@ -340,7 +422,7 @@ class _ScannerPageState extends State<ScannerPage> {
                   child: Card(
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
-                      leading: Icon(Icons.badge, color: Colors.deepPurple),
+                      leading: Icon(Icons.account_box, color: Colors.deepPurple),
                       title: Text(
                         'Name',
                         style: TextStyle(fontWeight: FontWeight.bold),
@@ -384,12 +466,12 @@ class _ScannerPageState extends State<ScannerPage> {
                   child: Card(
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
-                      leading: Icon(Icons.badge, color: Colors.deepPurple),
+                      leading: Icon(Icons.location_on, color: Colors.deepPurple),
                       title: Text(
                         'Address',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      trailing: Text(
+                      subtitle: Text(
                         _addressText,
                         style: TextStyle(
                           color: Colors.deepPurpleAccent,
@@ -406,7 +488,7 @@ class _ScannerPageState extends State<ScannerPage> {
                   child: Card(
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
-                      leading: Icon(Icons.badge, color: Colors.deepPurple),
+                      leading: Icon(Icons.money, color: Colors.deepPurple),
                       title: Text(
                         'Amount',
                         style: TextStyle(fontWeight: FontWeight.bold),
@@ -428,7 +510,7 @@ class _ScannerPageState extends State<ScannerPage> {
                   child: Card(
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     child: ListTile(
-                      leading: Icon(Icons.badge, color: Colors.deepPurple),
+                      leading: Icon(Icons.calendar_month, color: Colors.deepPurple),
                       title: Text(
                         'Date',
                         style: TextStyle(fontWeight: FontWeight.bold),
@@ -476,6 +558,107 @@ class _ScannerPageState extends State<ScannerPage> {
                     ElevatedButton(
                       onPressed: showEditDialog,
                       child: Text("Edit"),
+                    ),
+                    SizedBox(height: 10),
+
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (uid == null) return;
+
+                        String fileName = 'assets/${DateTime.now().millisecondsSinceEpoch}.jpg';
+                        Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
+
+                        await storageRef.putFile(_image!);
+
+                        DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+                        String? icImageUrl;
+                        String? contractImageUrl;
+                        String? billImageUrl;
+
+                        if(_documentType == 'Identity Card'){
+                          String? oldIcImageUrl = userDoc.get('icImageUrl') as String?;
+
+                          icImageUrl = await storageRef.getDownloadURL();
+
+                          if (oldIcImageUrl != null && oldIcImageUrl.isNotEmpty) {
+                            try {
+                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldIcImageUrl);
+                              await oldRef.delete();
+                            } catch (e) {
+                              print('Error deleting old image: $e');
+                            }
+                          }
+                        }
+
+                        if(_documentType == "Contract"){
+                          String? oldContractImageUrl = userDoc.get('contractImageUrl') as String?;
+
+                          contractImageUrl = await storageRef.getDownloadURL();
+
+                          if (oldContractImageUrl != null && oldContractImageUrl.isNotEmpty) {
+                            try {
+                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldContractImageUrl);
+                              await oldRef.delete();
+                            } catch (e) {
+                              print('Error deleting old image: $e');
+                            }
+                          }
+                        }
+
+                        if(_documentType == "Bill"){
+                          String? oldBillImageUrl = userDoc.get('billImageUrl') as String?;
+
+                          billImageUrl = await storageRef.getDownloadURL();
+
+                          if (oldBillImageUrl != null && oldBillImageUrl.isNotEmpty) {
+                            try {
+                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldBillImageUrl);
+                              await oldRef.delete();
+                            } catch (e) {
+                              print('Error deleting old image: $e');
+                            }
+                          }
+                        }
+
+
+                        await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(uid)
+                            .update({
+                          if (_nameText.isNotEmpty)
+                            'name': nameCtrl.text.trim(),
+                          if (_icText.isNotEmpty)
+                            'ic': icCtrl.text.trim(),
+                          if (_addressText.isNotEmpty)
+                            'address': addressCtrl.text.trim(),
+                          if (_dateText.isNotEmpty)
+                            'date': dateCtrl.text.trim(),
+                          if (_documentType == 'Identity Card')
+                            'icImageUrl': icImageUrl,
+                          if (_documentType == 'Contract')
+                            'contractImageUrl': contractImageUrl,
+                          if (_documentType == 'Bill')
+                            'billImageUrl': billImageUrl,
+                        });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile updated successfully!'),
+                          ),
+                        );
+
+                        Navigator.pop(context);
+
+                        setState(() {
+                          _isEditing = false;
+                          _nameText = nameCtrl.text.trim();
+                          _icText = icCtrl.text.trim();
+                          _addressText = addressCtrl.text.trim();
+                          _dateText = dateCtrl.text.trim();
+                        });
+                      },
+                      child: const Text("Save"),
                     ),
                     SizedBox(height: 10),
                   ],

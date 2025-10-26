@@ -71,7 +71,7 @@ class LandlordPage extends StatelessWidget {
                       final email = userData['email'] as String? ?? '-';
                       final role = userData['role'] as String? ?? '-';
                       final contactNumber = userData['contactNumber'] as String? ?? "-";
-                      final imageUrl = userData['imageUrl'] as String? ?? '';
+                      final avatarUrl = userData['avatarUrl'] as String? ?? '';
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,7 +80,7 @@ class LandlordPage extends StatelessWidget {
                             tag: 'avatar',
                             child: CircleAvatar(
                               radius: 30,
-                              backgroundImage: NetworkImage(imageUrl),
+                              backgroundImage: NetworkImage(avatarUrl),
                             ),
                           ),
                           SizedBox(height: 10),
@@ -183,7 +183,7 @@ class LandlordPage extends StatelessWidget {
                             } else {
                               final userData = snapshot.data!;
                               final name = userData['name'] as String? ?? '-';
-                              final imageUrl = userData['imageUrl'] as String? ?? '';
+                              final avatar = userData['avatarUrl'] as String? ?? '';
                               return Row(
                                 children: [
                                   Text(
@@ -199,7 +199,7 @@ class LandlordPage extends StatelessWidget {
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: CircleAvatar(
-                                        backgroundImage: NetworkImage(imageUrl),
+                                        backgroundImage: NetworkImage(avatar),
                                         radius: 40.0,
                                       ),
                                     ),

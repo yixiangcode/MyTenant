@@ -3,6 +3,7 @@ import 'scanner_page.dart';
 import 'maintenance_page.dart';
 import 'login_page.dart';
 import 'profile_page.dart';
+import 'document_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -68,7 +69,7 @@ class TenantPage extends StatelessWidget {
                       final email = userData['email'] as String? ?? '-';
                       final role = userData['role'] as String? ?? '-';
                       final contactNumber = userData['contactNumber'] as String? ?? "-";
-                      final imageUrl = userData['imageUrl'] as String? ?? '';
+                      final avatarUrl = userData['avatarUrl'] as String? ?? '';
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,7 +78,7 @@ class TenantPage extends StatelessWidget {
                             tag: 'avatar',
                             child: CircleAvatar(
                               radius: 30,
-                              backgroundImage: NetworkImage(imageUrl),
+                              backgroundImage: NetworkImage(avatarUrl),
                             ),
                           ),
                           SizedBox(height: 10),
@@ -188,26 +189,23 @@ class TenantPage extends StatelessWidget {
                             } else {
                               final userData = snapshot.data!;
                               final name = userData['name'] as String? ?? '-';
-                              final imageUrl = userData['imageUrl'] as String? ?? '';
+                              final avatarUrl = userData['avatarUrl'] as String? ?? '';
 
                               return Row(
                                 children: [
                                   Text(
-                                    "Hi, $name\nUnpaid Bill: RM 800\nDue Date: 12/12/2025",
+                                    "$name\nUnpaid Bill: RM 2000\nDue Date: 12/12/2025",
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w600,
                                     ),
                                     textAlign: TextAlign.left,
                                   ),
-                                  Hero(
-                                    tag: 'avatar',
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: CircleAvatar(
-                                        backgroundImage: NetworkImage(imageUrl),
-                                        radius: 35.0,
-                                      ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: CircleAvatar(
+                                      backgroundImage: NetworkImage(avatarUrl),
+                                      radius: 35.0,
                                     ),
                                   ),
                                 ],
@@ -278,7 +276,7 @@ class TenantPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => ProfilePage()),
+                          MaterialPageRoute(builder: (_) => DocumentPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),

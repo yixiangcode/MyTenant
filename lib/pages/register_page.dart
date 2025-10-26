@@ -25,8 +25,15 @@ class RegisterPageState extends State<RegisterPage> {
 
     await FirebaseFirestore.instance.collection('users').doc(uid).set({
       'email': emailCtrl.text,
-      'name': '${_selectedRole}101',
-      'contactNumber': 'Unknown',
+      'name': '',
+      'contactNumber': '',
+      'ic': '',
+      'address': '',
+      'avatarUrl': '',
+      'billImageUrl': '',
+      'contractImageUrl': '',
+      'icImageUrl': '',
+      'date': '',
       'role': _selectedRole,
       'createdAt': FieldValue.serverTimestamp(),
     });

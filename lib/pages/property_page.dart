@@ -125,7 +125,10 @@ class _PropertyPageState extends State<PropertyPage> {
                     child: Container(
                       height: 120,
                       width: double.infinity,
-                      color: Colors.grey[200],
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
                       alignment: Alignment.center,
                       child: _selectedImage != null
                           ? Image.file(_selectedImage!, fit: BoxFit.cover)
