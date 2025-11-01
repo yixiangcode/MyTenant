@@ -143,7 +143,8 @@ class TenantPage extends StatelessWidget {
       ),
 
       //backgroundColor: Colors.grey[100],
-      backgroundColor: const Color(0xFFF2F4F7),
+      //backgroundColor: const Color(0xFFF2F4F7),
+      backgroundColor: Colors.purple[50],
 
       body: SingleChildScrollView(
         child: Padding(
@@ -169,18 +170,16 @@ class TenantPage extends StatelessWidget {
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
 
+                      children: [
                         FutureBuilder<Map<String, dynamic>?>(
                           future: getUserInformation(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
-                              // 数据加载中
                               return const Center(child: CircularProgressIndicator());
                             } else if (snapshot.hasError) {
-                              // 数据加载错误
                               return Text(
-                                "Welcome to My Tenant\nDisplay Error",
+                                "Loading Error",
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
@@ -192,6 +191,7 @@ class TenantPage extends StatelessWidget {
                               final avatarUrl = userData['avatarUrl'] as String? ?? '';
 
                               return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
                                     "$name\nUnpaid Bill: RM 2000\nDue Date: 12/12/2025",

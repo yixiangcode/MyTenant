@@ -24,6 +24,19 @@ class _ScannerPageState extends State<ScannerPage> {
   final ImagePicker _picker = ImagePicker();
   final textRecognizer = TextRecognizer();
 
+  String? _selectedMonth;
+  String? _selectedYear;
+
+  final List<String> months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  final List<String> years = List<String>.generate(5, (i) {
+    final currentYear = DateTime.now().year;
+    return (currentYear + i).toString();
+  });
+
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera, imageQuality: 30);
     if (pickedFile != null) {
@@ -105,7 +118,7 @@ class _ScannerPageState extends State<ScannerPage> {
   final TextEditingController icCtrl = TextEditingController();
   final TextEditingController amountCtrl = TextEditingController();
   final TextEditingController dateCtrl = TextEditingController();
-  bool _isEditing = false;
+  bool _isLoading = false;
 
   void showEditDialog() {
     nameCtrl.text = _nameText;
@@ -117,6 +130,9 @@ class _ScannerPageState extends State<ScannerPage> {
     final user = FirebaseAuth.instance.currentUser;
     final uid = user?.uid;
 
+    _selectedMonth = months[DateTime.now().month - 1];
+    _selectedYear = DateTime.now().year.toString();
+
     showDialog(
       context: context,
 
@@ -127,6 +143,9 @@ class _ScannerPageState extends State<ScannerPage> {
             content: SingleChildScrollView(
               child: Column(
                 children: [
+
+
+
                   if (_nameText.isNotEmpty)...[
                     TextField(
                       controller: nameCtrl,
@@ -154,19 +173,58 @@ class _ScannerPageState extends State<ScannerPage> {
                   const SizedBox(height: 15),
                   ],
 
-                  if (_amountText.isNotEmpty)...[
-                    TextField(
-                      controller: amountCtrl,
-                      decoration: InputDecoration(labelText: "Amount", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                  if (_documentType == 'Bill') ...[
+                    // --- 月份选单 ---
+                    const SizedBox(height: 15),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: "Bill Month",
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                      ),
+                      value: _selectedMonth,
+                      items: months.map((month) {
+                        return DropdownMenuItem(value: month, child: Text(month));
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setDialogState(() {
+                          _selectedMonth = newValue;
+                        });
+                      },
                     ),
-                  const SizedBox(height: 15),
-                  ],
 
-                  if (_dateText.isNotEmpty)
-                    TextField(
-                      controller: dateCtrl,
-                      decoration: InputDecoration(labelText: "Date", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                    const SizedBox(height: 15),
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: "Bill Year",
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                      ),
+                      value: _selectedYear,
+                      items: years.map((year) {
+                        return DropdownMenuItem(value: year, child: Text(year));
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setDialogState(() {
+                          _selectedYear = newValue;
+                        });
+                      },
                     ),
+
+                    if (_amountText.isNotEmpty) ...[
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: amountCtrl,
+                        decoration: InputDecoration(labelText: "Amount", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                      ),
+                    ],
+
+                    const SizedBox(height: 15),
+
+                    if (_dateText.isNotEmpty)
+                      TextField(
+                        controller: dateCtrl,
+                        decoration: InputDecoration(labelText: "Date", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),
+                      ),
+                  ]
                 ],
               ),
             ),
@@ -175,8 +233,8 @@ class _ScannerPageState extends State<ScannerPage> {
                 onPressed: () => Navigator.pop(context),
                 child: const Text("Cancel"),
               ),
-              // **添加加载状态显示**
-              _isEditing
+
+              _isLoading
                   ? const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
                       child: CircularProgressIndicator(strokeWidth: 2),
@@ -186,7 +244,7 @@ class _ScannerPageState extends State<ScannerPage> {
                         if (uid == null) return;
 
                         setDialogState(() {
-                          _isEditing = true;
+                          _isLoading = true;
                         });
 
                         String fileName = 'assets/${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -198,7 +256,6 @@ class _ScannerPageState extends State<ScannerPage> {
 
                         String? icImageUrl;
                         String? contractImageUrl;
-                        String? billImageUrl;
 
                         if(_documentType == 'Identity Card'){
                           String? oldIcImageUrl = userDoc.get('icImageUrl') as String?;
@@ -231,18 +288,28 @@ class _ScannerPageState extends State<ScannerPage> {
                         }
 
                         if(_documentType == "Bill"){
-                          String? oldBillImageUrl = userDoc.get('billImageUrl') as String?;
-
-                          billImageUrl = await storageRef.getDownloadURL();
-
-                          if (oldBillImageUrl != null && oldBillImageUrl.isNotEmpty) {
-                            try {
-                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldBillImageUrl);
-                              await oldRef.delete();
-                            } catch (e) {
-                              print('Error deleting old image: $e');
-                            }
+                          String billImageUrl = await storageRef.getDownloadURL();
+                          if (_selectedMonth == null || _selectedYear == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please select Bill Month and Year.')),
+                            );
+                            setDialogState(() { _isLoading = false; });
+                            return;
                           }
+
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(uid)
+                              .collection('bills')
+                              .add({
+
+                            'month': _selectedMonth,
+                            'year': _selectedYear,
+                            'amount': amountCtrl.text.trim(),
+                            'date': dateCtrl.text.trim(),
+                            'imageUrl': billImageUrl,
+                            'createdAt': FieldValue.serverTimestamp(),
+                          });
                         }
 
 
@@ -262,8 +329,6 @@ class _ScannerPageState extends State<ScannerPage> {
                                 'icImageUrl': icImageUrl,
                               if (_documentType == 'Contract')
                                 'contractImageUrl': contractImageUrl,
-                              if (_documentType == 'Bill')
-                                'billImageUrl': billImageUrl,
                             });
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -275,7 +340,7 @@ class _ScannerPageState extends State<ScannerPage> {
                         Navigator.pop(context);
 
                         setState(() {
-                          _isEditing = false;
+                          _isLoading = false;
                           _nameText = nameCtrl.text.trim();
                           _icText = icCtrl.text.trim();
                           _addressText = addressCtrl.text.trim();
@@ -318,6 +383,8 @@ class _ScannerPageState extends State<ScannerPage> {
               if (_fullText.isEmpty)
                 Column(
                   children: [
+                    Image.asset('images/ic.png'),
+
                     Card(
                       margin: const EdgeInsets.all(25),
                       shape: RoundedRectangleBorder(
@@ -350,6 +417,8 @@ class _ScannerPageState extends State<ScannerPage> {
                       ),
                     ),
 
+                    Image.asset('images/contract.png', width: 300.0, height: 300.0,),
+
                     Card(
                       margin: const EdgeInsets.all(25),
                       shape: RoundedRectangleBorder(
@@ -381,6 +450,9 @@ class _ScannerPageState extends State<ScannerPage> {
                         ),
                       ),
                     ),
+
+                    Image.asset('images/electric_bill.png'),
+                    Image.asset('images/water_bill.png'),
 
                     Card(
                       margin: const EdgeInsets.all(25),
@@ -538,7 +610,7 @@ class _ScannerPageState extends State<ScannerPage> {
                           builder: (BuildContext context) {
                             return AlertDialog(
                               title: const Text('Full Recognized Text'),
-                              content: Text(_fullText),
+                              content: SingleChildScrollView(child: Text(_fullText)),
                               actions: [
                                 TextButton(
                                   child: const Text('Cancel'),
@@ -565,6 +637,10 @@ class _ScannerPageState extends State<ScannerPage> {
                       onPressed: () async {
                         if (uid == null) return;
 
+                        setState(() {
+                          _isLoading = true;
+                        });
+
                         String fileName = 'assets/${DateTime.now().millisecondsSinceEpoch}.jpg';
                         Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
 
@@ -574,7 +650,6 @@ class _ScannerPageState extends State<ScannerPage> {
 
                         String? icImageUrl;
                         String? contractImageUrl;
-                        String? billImageUrl;
 
                         if(_documentType == 'Identity Card'){
                           String? oldIcImageUrl = userDoc.get('icImageUrl') as String?;
@@ -607,18 +682,28 @@ class _ScannerPageState extends State<ScannerPage> {
                         }
 
                         if(_documentType == "Bill"){
-                          String? oldBillImageUrl = userDoc.get('billImageUrl') as String?;
-
-                          billImageUrl = await storageRef.getDownloadURL();
-
-                          if (oldBillImageUrl != null && oldBillImageUrl.isNotEmpty) {
-                            try {
-                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldBillImageUrl);
-                              await oldRef.delete();
-                            } catch (e) {
-                              print('Error deleting old image: $e');
-                            }
+                          String billImageUrl = await storageRef.getDownloadURL();
+                          if (_selectedMonth == null || _selectedYear == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please select Bill Month and Year.')),
+                            );
+                            setState(() { _isLoading = false; });
+                            return;
                           }
+
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(uid)
+                              .collection('bills')
+                              .add({
+
+                            'month': _selectedMonth,
+                            'year': _selectedYear,
+                            'amount': amountCtrl.text.trim(),
+                            'date': dateCtrl.text.trim(),
+                            'imageUrl': billImageUrl,
+                            'createdAt': FieldValue.serverTimestamp(),
+                          });
                         }
 
 
@@ -638,8 +723,6 @@ class _ScannerPageState extends State<ScannerPage> {
                             'icImageUrl': icImageUrl,
                           if (_documentType == 'Contract')
                             'contractImageUrl': contractImageUrl,
-                          if (_documentType == 'Bill')
-                            'billImageUrl': billImageUrl,
                         });
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -651,7 +734,7 @@ class _ScannerPageState extends State<ScannerPage> {
                         Navigator.pop(context);
 
                         setState(() {
-                          _isEditing = false;
+                          _isLoading = false;
                           _nameText = nameCtrl.text.trim();
                           _icText = icCtrl.text.trim();
                           _addressText = addressCtrl.text.trim();

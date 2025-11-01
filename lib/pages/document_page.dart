@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'scanner_page.dart';
 
 class DocumentPage extends StatelessWidget {
   const DocumentPage({super.key});
@@ -52,11 +54,9 @@ class DocumentPage extends StatelessWidget {
                   final name = userData['name'] as String? ?? '-';
                   final role = userData['role'] as String? ?? '-';
                   final avatarUrl = userData['avatarUrl'] as String? ?? '';
-                  final icImageUrl = userData['icImageUrl'] as String? ?? '-';
-                  final contractImageUrl =
-                      userData['contractImageUrl'] as String? ?? '-';
-                  final billImageUrl =
-                      userData['billImageUrl'] as String? ?? '-';
+                  var icImageUrl = userData['icImageUrl'] as String? ?? '-';
+                  var contractImageUrl = userData['contractImageUrl'] as String? ?? '-';
+                  var billImageUrl = userData['billImageUrl'] as String? ?? '-';
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -99,6 +99,45 @@ class DocumentPage extends StatelessWidget {
                               title: Text(
                                 "Identity Card",
                                 style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit),
+                                    color: Colors.deepPurple,
+                                    onPressed: () {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => ScannerPage()),
+                                      );
+                                    },
+                                  ),
+
+                                  if(icImageUrl.isNotEmpty)
+                                    IconButton(
+                                      icon: Icon(Icons.delete),
+                                      color: Colors.deepPurple,
+                                      onPressed: () async {
+                                        Reference storageRef = FirebaseStorage.instance.refFromURL(icImageUrl);
+                                        await storageRef.delete();
+
+                                        await FirebaseFirestore.instance.collection('users').doc(uid).update({
+                                          'icImageUrl': '',
+                                        });
+
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Identity Card deleted successfully!')),
+                                        );
+
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => DocumentPage()),
+                                        );
+
+                                      },
+                                  ),
+                                ],
                               ),
                             ),
 
@@ -146,8 +185,7 @@ class DocumentPage extends StatelessWidget {
                                                   size: 50,
                                                 ),
                                       ),
-                                    )
-                                  : const Icon(Icons.broken_image, size: 50),
+                                    ) : const Text("No Identity Card Recorded"),
                             ),
                           ],
                         ),
@@ -167,6 +205,45 @@ class DocumentPage extends StatelessWidget {
                               title: Text(
                                 "Contract",
                                 style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit),
+                                    color: Colors.deepPurple,
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => ScannerPage()),
+                                      );
+                                    },
+                                  ),
+
+                                  if(contractImageUrl.isNotEmpty)
+                                    IconButton(
+                                      icon: Icon(Icons.delete),
+                                      color: Colors.deepPurple,
+                                      onPressed: () async {
+                                        Reference storageRef = FirebaseStorage.instance.refFromURL(contractImageUrl);
+                                        await storageRef.delete();
+
+                                        await FirebaseFirestore.instance.collection('users').doc(uid).update({
+                                          'contractImageUrl': '',
+                                        });
+
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Contract deleted successfully!')),
+                                        );
+
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => DocumentPage()),
+                                        );
+
+                                      },
+                                    ),
+                                ],
                               ),
                             ),
 
@@ -214,8 +291,7 @@ class DocumentPage extends StatelessWidget {
                                     size: 50,
                                   ),
                                 ),
-                              )
-                                  : const Icon(Icons.broken_image, size: 50),
+                              ) : const Text("No Contract Recorded"),
                             ),
                           ],
                         ),
@@ -223,70 +299,125 @@ class DocumentPage extends StatelessWidget {
 
                       SizedBox(height: 8.0),
 
-                      Card(
-                        margin: EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Column(
-                          children: [
-                            ListTile(
-                              leading: Icon(
-                                Icons.mail,
-                                color: Colors.deepPurple,
-                              ),
-                              title: Text(
-                                "Bill",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
+                      StreamBuilder<QuerySnapshot>(
 
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                                vertical: 8.0,
-                              ),
-                              child: billImageUrl.isNotEmpty
-                                  ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8.0),
-                                child: Image.network(
-                                  billImageUrl,
-                                  width: double.infinity,
-                                  height: 200,
-                                  fit: BoxFit.cover,
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(uid)
+                            .collection('bills')
+                            .orderBy('createdAt', descending: true)
+                            .snapshots(),
+                        builder: (context, billSnapshot) {
+                          if (billSnapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
 
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) {
-                                      return child;
-                                    }
+                          if (billSnapshot.hasError) {
+                            return Center(child: Text("Error loading bills: ${billSnapshot.error}"));
+                          }
 
-                                    return SizedBox(
-                                      height: 200,
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          value:
-                                          loadingProgress
-                                              .expectedTotalBytes !=
-                                              null
-                                              ? loadingProgress
-                                              .cumulativeBytesLoaded /
-                                              loadingProgress
-                                                  .expectedTotalBytes!
-                                              : null,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                          final bills = billSnapshot.data!.docs;
 
-                                  errorBuilder:
-                                      (context, error, stackTrace) =>
-                                  const Icon(
-                                    Icons.broken_image,
-                                    size: 50,
+                          return Card(
+                            margin: EdgeInsets.symmetric(horizontal: 10.0),
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  leading: Icon(Icons.mail, color: Colors.deepPurple),
+                                  title: Text("Utility Bills (${bills.length})", style: TextStyle(fontWeight: FontWeight.bold)),
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.add, color: Colors.deepPurple),
+                                    onPressed: () {
+                                      Navigator.push(context, MaterialPageRoute(builder: (_) => ScannerPage()));
+                                    },
                                   ),
                                 ),
-                              )
-                                  : const Icon(Icons.broken_image, size: 50),
+                                Divider(),
+
+                                if (bills.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Text("No Bills Recorded."),
+                                  ),
+
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: bills.length,
+                                  itemBuilder: (context, index) {
+                                    final bill = bills[index].data() as Map<String, dynamic>;
+                                    final docId = bills[index].id;
+                                    final billImageUrl = bill['imageUrl'] as String? ?? '';
+
+                                    final billTitle = "${bill['month'] ?? 'Month N/A'} ${bill['year'] ?? ''}";
+
+                                    return Column(
+                                      children: [
+                                        ListTile(
+                                          title: Text(billTitle),
+                                          subtitle: Text("Amount: ${bill['amount'] ?? 'N/A'} (Due: ${bill['date'] ?? 'N/A'})"),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.delete, color: Colors.red),
+                                                onPressed: () async {
+                                                  if (billImageUrl.isNotEmpty) {
+                                                    await FirebaseStorage.instance.refFromURL(billImageUrl).delete();
+                                                  }
+
+                                                  await FirebaseFirestore.instance
+                                                      .collection('users').doc(uid)
+                                                      .collection('bills').doc(docId)
+                                                      .delete();
+
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('$billTitle bill deleted.')),
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                          onTap: () {
+                                            if (billImageUrl.isNotEmpty) {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) => AlertDialog(
+                                                  content: Image.network(
+                                                    billImageUrl,
+                                                    fit: BoxFit.contain,
+                                                    loadingBuilder: (context, child, loadingProgress) {
+                                                      if (loadingProgress == null) return child;
+                                                      return SizedBox(
+                                                        height: 300,
+                                                        child: Center(child: CircularProgressIndicator()),
+                                                      );
+                                                    },
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(context),
+                                                      child: const Text('Close'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            } else {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('No image recorded for this bill.')),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                        Divider(height: 1),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ],
                   );

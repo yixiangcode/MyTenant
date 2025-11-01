@@ -19,7 +19,7 @@ class _PropertyPageState extends State<PropertyPage> {
   final TextEditingController noteCtrl = TextEditingController();
 
   File? _selectedImage;
-  bool _isAdding = false;
+  bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -55,7 +55,7 @@ class _PropertyPageState extends State<PropertyPage> {
     Navigator.pop(context);
 
     setState(() {
-      _isAdding = true;
+      _isLoading = true;
     });
 
     String imageUrl = '';
@@ -95,7 +95,7 @@ class _PropertyPageState extends State<PropertyPage> {
       );
     } finally {
       setState(() {
-        _isAdding = false;
+        _isLoading = false;
       });
     }
   }
@@ -149,7 +149,7 @@ class _PropertyPageState extends State<PropertyPage> {
             actions: [
               TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
               // **添加加载状态显示**
-              _isAdding
+              _isLoading
                   ? const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -180,7 +180,7 @@ class _PropertyPageState extends State<PropertyPage> {
         child: const Icon(Icons.add),
       ),
 
-      body: _isAdding
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

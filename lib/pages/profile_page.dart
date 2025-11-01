@@ -17,7 +17,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController emailCtrl = TextEditingController();
   final TextEditingController phoneCtrl = TextEditingController();
   final TextEditingController addressCtrl = TextEditingController();
-  bool _isEditing = false;
+  bool _isLoading = false;
 
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
@@ -146,7 +146,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: const Text("Cancel"),
               ),
 
-              _isEditing
+              _isLoading
                   ? const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
                       child: CircularProgressIndicator(strokeWidth: 2),
@@ -156,7 +156,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   if (uid == null) return;
 
                   setDialogState(() {
-                    _isEditing = true;
+                    _isLoading = true;
                   });
 
                   String? avatarUrl;
@@ -205,11 +205,17 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SnackBar(content: Text('Profile updated successfully!')),
                   );
 
-                  Navigator.pop(context);
+                  Navigator.pop(context); // close dialog
+
+                  // reload
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => ProfilePage()),
+                  );
                 },
 
                 child: const Text("Save"),
-                    ),
+              ),
             ],
           );
         },
