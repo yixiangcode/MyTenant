@@ -50,7 +50,9 @@ class _MaintenancePageState extends State<MaintenancePage> {
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
-      backgroundColor: const Color(0xFFF2F4F7),
+
+      backgroundColor: Colors.purple[50],
+
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

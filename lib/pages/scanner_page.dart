@@ -26,6 +26,7 @@ class _ScannerPageState extends State<ScannerPage> {
 
   String? _selectedMonth;
   String? _selectedYear;
+  String? _selectedBillType;
 
   final List<String> months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -93,7 +94,6 @@ class _ScannerPageState extends State<ScannerPage> {
             .trim();
         _addressText = address;
       } else if (_documentType == 'Bill') {
-        _dateText = date;
         _amountText = amount;
       } else if (_documentType == 'Contract') {
         _nameText = name
@@ -174,11 +174,11 @@ class _ScannerPageState extends State<ScannerPage> {
                   ],
 
                   if (_documentType == 'Bill') ...[
-                    // --- 月份选单 ---
+
                     const SizedBox(height: 15),
                     DropdownButtonFormField<String>(
                       decoration: InputDecoration(
-                        labelText: "Bill Month",
+                        labelText: "Month",
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
                       ),
                       value: _selectedMonth,
@@ -195,7 +195,7 @@ class _ScannerPageState extends State<ScannerPage> {
                     const SizedBox(height: 15),
                     DropdownButtonFormField<String>(
                       decoration: InputDecoration(
-                        labelText: "Bill Year",
+                        labelText: "Year",
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
                       ),
                       value: _selectedYear,
@@ -289,47 +289,57 @@ class _ScannerPageState extends State<ScannerPage> {
 
                         if(_documentType == "Bill"){
                           String billImageUrl = await storageRef.getDownloadURL();
-                          if (_selectedMonth == null || _selectedYear == null) {
+                          if (_selectedMonth == null || _selectedYear == null || _selectedBillType == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please select Bill Month and Year.')),
+                              const SnackBar(content: Text('Please select Bill Type, Month, and Year.')),
                             );
                             setDialogState(() { _isLoading = false; });
                             return;
                           }
 
+                          final assetQuery = await FirebaseFirestore.instance
+                              .collection('assets')
+                              .where('tenantId', isEqualTo: uid)
+                              .limit(1)
+                              .get();
+
+                          final assetId = assetQuery.docs.first.id;
+
                           await FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(uid)
+                              .collection('assets')
+                              .doc(assetId)
                               .collection('bills')
                               .add({
-
+                            'ownerId': uid,
                             'month': _selectedMonth,
                             'year': _selectedYear,
+                            'type': _selectedBillType,
                             'amount': amountCtrl.text.trim(),
-                            'date': dateCtrl.text.trim(),
                             'imageUrl': billImageUrl,
                             'createdAt': FieldValue.serverTimestamp(),
                           });
                         }
 
 
-                        await FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(uid)
-                            .update({
-                              if (_nameText.isNotEmpty)
-                                'name': nameCtrl.text.trim(),
-                              if (_icText.isNotEmpty)
-                                'ic': icCtrl.text.trim(),
-                              if (_addressText.isNotEmpty)
-                                'address': addressCtrl.text.trim(),
-                              if (_dateText.isNotEmpty)
-                                'date': dateCtrl.text.trim(),
-                              if (_documentType == 'Identity Card')
-                                'icImageUrl': icImageUrl,
-                              if (_documentType == 'Contract')
-                                'contractImageUrl': contractImageUrl,
-                            });
+                        if (_documentType != "Bill") {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(uid)
+                              .update({
+                            if (_nameText.isNotEmpty)
+                              'name': nameCtrl.text.trim(),
+                            if (_icText.isNotEmpty)
+                              'ic': icCtrl.text.trim(),
+                            if (_addressText.isNotEmpty)
+                              'address': addressCtrl.text.trim(),
+                            if (_dateText.isNotEmpty)
+                              'date': dateCtrl.text.trim(),
+                            if (_documentType == 'Identity Card')
+                              'icImageUrl': icImageUrl,
+                            if (_documentType == 'Contract')
+                              'contractImageUrl': contractImageUrl,
+                          });
+                        }
 
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -359,9 +369,6 @@ class _ScannerPageState extends State<ScannerPage> {
   @override
   Widget build(BuildContext context) {
 
-    final user = FirebaseAuth.instance.currentUser;
-    final uid = user?.uid;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -371,7 +378,7 @@ class _ScannerPageState extends State<ScannerPage> {
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
-      backgroundColor: const Color(0xFFF2F4F7),
+      backgroundColor: Colors.purple[50],
       body: Center(
         child: SingleChildScrollView(
           child: Column(
@@ -383,76 +390,174 @@ class _ScannerPageState extends State<ScannerPage> {
               if (_fullText.isEmpty)
                 Column(
                   children: [
-                    Image.asset('images/ic.png'),
-
                     Card(
                       margin: const EdgeInsets.all(25),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 8,
-                      child: SizedBox(
-                        height: 60.0,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.badge,
-                            color: Colors.indigo,
-                            size: 50.0,
+                      child: InkWell(
+                        onTap: () {
+                          _documentType = 'Identity Card';
+                          _pickImage();
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Image.asset(
+                                'images/ic.png',
+                                height: 170,
+                                fit: BoxFit.contain,
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.badge,
+                                        color: Colors.indigo,
+                                        size: 50.0,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        ' Identity Card',
+                                        style: TextStyle(
+                                          fontSize: 26,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.indigo,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          title: Text(
-                            ' Identity Card',
-                            style: TextStyle(
-                              fontSize: 26,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: Colors.indigo,
-                          ),
-                          onTap: () {
-                            _documentType = 'Identity Card';
-                            _pickImage();
-                          },
                         ),
                       ),
                     ),
 
-                    Image.asset('images/contract.png', width: 300.0, height: 300.0,),
-
                     Card(
                       margin: const EdgeInsets.all(25),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 8,
-                      child: SizedBox(
-                        height: 60.0,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.description,
-                            color: Colors.indigo,
-                            size: 50.0,
+                      child: InkWell(
+                        onTap: () {
+                          _documentType = 'Contract';
+                          _pickImage();
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Image.asset(
+                                'images/contract.png',
+                                height: 190,
+                                fit: BoxFit.contain,
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.description,
+                                        color: Colors.indigo,
+                                        size: 50.0,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        ' Contract',
+                                        style: TextStyle(
+                                          fontSize: 26,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.indigo,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          title: Text(
-                            ' Contract',
-                            style: TextStyle(
-                              fontSize: 26,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: Colors.indigo,
-                          ),
-                          onTap: () {
-                            _documentType = 'Contract';
-                            _pickImage();
-                          },
                         ),
                       ),
                     ),
 
-                    Image.asset('images/electric_bill.png'),
-                    Image.asset('images/water_bill.png'),
+                    Card(
+                      margin: const EdgeInsets.all(25),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 8,
+                      child: InkWell(
+                        onTap: () {
+                          _documentType = 'Bill';
+                          _selectedBillType = 'Electric';
+                          _pickImage();
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Image.asset(
+                                'images/electric_bill.png',
+                                height: 210,
+                                fit: BoxFit.contain,
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.receipt_long,
+                                        color: Colors.indigo,
+                                        size: 50.0,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        ' Electric Bill',
+                                        style: TextStyle(
+                                          fontSize: 26,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.indigo,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
 
                     Card(
                       margin: const EdgeInsets.all(25),
@@ -460,28 +565,53 @@ class _ScannerPageState extends State<ScannerPage> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 8,
-                      child: SizedBox(
-                        height: 60.0,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.receipt_long,
-                            color: Colors.indigo,
-                            size: 50.0,
+                      child: InkWell(
+                        onTap: () {
+                          _documentType = 'Bill';
+                          _selectedBillType = 'Water';
+                          _pickImage();
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Image.asset(
+                                'images/water_bill.png',
+                                height: 200,
+                                fit: BoxFit.contain,
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.receipt_long,
+                                        color: Colors.indigo,
+                                        size: 50.0,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        ' Water Bill',
+                                        style: TextStyle(
+                                          fontSize: 26,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.indigo,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          title: Text(
-                            ' Bill',
-                            style: TextStyle(
-                              fontSize: 26,
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.chevron_right,
-                            color: Colors.indigo,
-                          ),
-                          onTap: () {
-                            _documentType = 'Bill';
-                            _pickImage();
-                          },
                         ),
                       ),
                     ),
@@ -630,118 +760,6 @@ class _ScannerPageState extends State<ScannerPage> {
                     ElevatedButton(
                       onPressed: showEditDialog,
                       child: Text("Edit"),
-                    ),
-                    SizedBox(height: 10),
-
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (uid == null) return;
-
-                        setState(() {
-                          _isLoading = true;
-                        });
-
-                        String fileName = 'assets/${DateTime.now().millisecondsSinceEpoch}.jpg';
-                        Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
-
-                        await storageRef.putFile(_image!);
-
-                        DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
-
-                        String? icImageUrl;
-                        String? contractImageUrl;
-
-                        if(_documentType == 'Identity Card'){
-                          String? oldIcImageUrl = userDoc.get('icImageUrl') as String?;
-
-                          icImageUrl = await storageRef.getDownloadURL();
-
-                          if (oldIcImageUrl != null && oldIcImageUrl.isNotEmpty) {
-                            try {
-                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldIcImageUrl);
-                              await oldRef.delete();
-                            } catch (e) {
-                              print('Error deleting old image: $e');
-                            }
-                          }
-                        }
-
-                        if(_documentType == "Contract"){
-                          String? oldContractImageUrl = userDoc.get('contractImageUrl') as String?;
-
-                          contractImageUrl = await storageRef.getDownloadURL();
-
-                          if (oldContractImageUrl != null && oldContractImageUrl.isNotEmpty) {
-                            try {
-                              Reference oldRef = FirebaseStorage.instance.refFromURL(oldContractImageUrl);
-                              await oldRef.delete();
-                            } catch (e) {
-                              print('Error deleting old image: $e');
-                            }
-                          }
-                        }
-
-                        if(_documentType == "Bill"){
-                          String billImageUrl = await storageRef.getDownloadURL();
-                          if (_selectedMonth == null || _selectedYear == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please select Bill Month and Year.')),
-                            );
-                            setState(() { _isLoading = false; });
-                            return;
-                          }
-
-                          await FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(uid)
-                              .collection('bills')
-                              .add({
-
-                            'month': _selectedMonth,
-                            'year': _selectedYear,
-                            'amount': amountCtrl.text.trim(),
-                            'date': dateCtrl.text.trim(),
-                            'imageUrl': billImageUrl,
-                            'createdAt': FieldValue.serverTimestamp(),
-                          });
-                        }
-
-
-                        await FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(uid)
-                            .update({
-                          if (_nameText.isNotEmpty)
-                            'name': nameCtrl.text.trim(),
-                          if (_icText.isNotEmpty)
-                            'ic': icCtrl.text.trim(),
-                          if (_addressText.isNotEmpty)
-                            'address': addressCtrl.text.trim(),
-                          if (_dateText.isNotEmpty)
-                            'date': dateCtrl.text.trim(),
-                          if (_documentType == 'Identity Card')
-                            'icImageUrl': icImageUrl,
-                          if (_documentType == 'Contract')
-                            'contractImageUrl': contractImageUrl,
-                        });
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Profile updated successfully!'),
-                          ),
-                        );
-
-                        Navigator.pop(context);
-
-                        setState(() {
-                          _isLoading = false;
-                          _nameText = nameCtrl.text.trim();
-                          _icText = icCtrl.text.trim();
-                          _addressText = addressCtrl.text.trim();
-                          _dateText = dateCtrl.text.trim();
-                        });
-                      },
-                      child: const Text("Save"),
                     ),
                     SizedBox(height: 10),
                   ],

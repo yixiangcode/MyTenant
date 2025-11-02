@@ -138,7 +138,9 @@ class LandlordPage extends StatelessWidget {
           ],
         ),
       ),
-      backgroundColor: const Color(0xFFF2F4F7),
+
+      backgroundColor: Colors.purple[50],
+
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -236,7 +238,7 @@ class LandlordPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => ManageTenantPage(ownerId: '123')),
+                          MaterialPageRoute(builder: (_) => ManageTenantPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),
@@ -272,7 +274,7 @@ class LandlordPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => PropertyPage(ownerId: '123')),
+                          MaterialPageRoute(builder: (_) => PropertyPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),
@@ -304,7 +306,7 @@ class LandlordPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => ManageTenantPage(ownerId: '123')),
+                          MaterialPageRoute(builder: (_) => ManageTenantPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),
@@ -340,7 +342,7 @@ class LandlordPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => PropertyPage(ownerId: '123')),
+                          MaterialPageRoute(builder: (_) => PropertyPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),
@@ -376,7 +378,7 @@ class LandlordPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => ManageTenantPage(ownerId: '123')),
+                          MaterialPageRoute(builder: (_) => ManageTenantPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),

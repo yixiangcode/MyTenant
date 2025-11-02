@@ -206,12 +206,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   );
 
                   Navigator.pop(context); // close dialog
-
-                  // reload
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => ProfilePage()),
-                  );
+                  setState(() {}); // refresh
                 },
 
                 child: const Text("Save"),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'notification_page.dart';
 import 'scanner_page.dart';
 import 'maintenance_page.dart';
 import 'login_page.dart';
@@ -35,7 +36,6 @@ class TenantPage extends StatelessWidget {
             const Text('MyTenant', style: TextStyle(color: Colors.white)),
           ],
         ),
-        //actions: [IconButton(onPressed: (){}, icon: const Icon(Icons.settings))],
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
@@ -142,8 +142,6 @@ class TenantPage extends StatelessWidget {
         ),
       ),
 
-      //backgroundColor: Colors.grey[100],
-      //backgroundColor: const Color(0xFFF2F4F7),
       backgroundColor: Colors.purple[50],
 
       body: SingleChildScrollView(
@@ -380,7 +378,7 @@ class TenantPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => MaintenancePage()),
+                          MaterialPageRoute(builder: (_) => NotificationPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),

@@ -20,11 +20,24 @@ class DocumentPage extends StatelessWidget {
       return userInfo.data() as Map<String, dynamic>?;
     }
 
+    Future<String?> _getAssetId() async {
+      final assetQuery = await FirebaseFirestore.instance
+          .collection('assets')
+          .where('tenantId', isEqualTo: uid)
+          .limit(1)
+          .get();
+
+      if (assetQuery.docs.isNotEmpty) {
+        return assetQuery.docs.first.id;
+      }
+      return null;
+    }
+
     return Scaffold(
       backgroundColor: Colors.purple[50],
 
       appBar: AppBar(
-        title: const Text('Document', style: TextStyle(color: Colors.white)),
+        title: const Text('My Document', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
       ),
@@ -56,7 +69,6 @@ class DocumentPage extends StatelessWidget {
                   final avatarUrl = userData['avatarUrl'] as String? ?? '';
                   var icImageUrl = userData['icImageUrl'] as String? ?? '-';
                   var contractImageUrl = userData['contractImageUrl'] as String? ?? '-';
-                  var billImageUrl = userData['billImageUrl'] as String? ?? '-';
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -103,21 +115,31 @@ class DocumentPage extends StatelessWidget {
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  IconButton(
-                                    icon: Icon(Icons.edit),
-                                    color: Colors.deepPurple,
-                                    onPressed: () {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => ScannerPage()),
-                                      );
-                                    },
-                                  ),
-
-                                  if(icImageUrl.isNotEmpty)
+                                  if(icImageUrl.isEmpty)
                                     IconButton(
-                                      icon: Icon(Icons.delete),
+                                      icon: Icon(Icons.add_a_photo),
                                       color: Colors.deepPurple,
+                                      onPressed: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => ScannerPage()),
+                                        );
+                                      },
+                                    ),
+
+                                  if(icImageUrl.isNotEmpty)...[
+                                    IconButton(
+                                      icon: Icon(Icons.edit),
+                                      color: Colors.deepPurple,
+                                      onPressed: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => ScannerPage()),
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
                                       onPressed: () async {
                                         Reference storageRef = FirebaseStorage.instance.refFromURL(icImageUrl);
                                         await storageRef.delete();
@@ -136,7 +158,7 @@ class DocumentPage extends StatelessWidget {
                                         );
 
                                       },
-                                  ),
+                                  ),]
                                 ],
                               ),
                             ),
@@ -209,21 +231,31 @@ class DocumentPage extends StatelessWidget {
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  IconButton(
-                                    icon: Icon(Icons.edit),
-                                    color: Colors.deepPurple,
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => ScannerPage()),
-                                      );
-                                    },
-                                  ),
-
-                                  if(contractImageUrl.isNotEmpty)
+                                  if(contractImageUrl.isEmpty)
                                     IconButton(
-                                      icon: Icon(Icons.delete),
+                                      icon: Icon(Icons.add_a_photo),
                                       color: Colors.deepPurple,
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => ScannerPage()),
+                                        );
+                                      },
+                                    ),
+
+                                  if(contractImageUrl.isNotEmpty)...[
+                                    IconButton(
+                                      icon: Icon(Icons.edit),
+                                      color: Colors.deepPurple,
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => ScannerPage()),
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
                                       onPressed: () async {
                                         Reference storageRef = FirebaseStorage.instance.refFromURL(contractImageUrl);
                                         await storageRef.delete();
@@ -242,7 +274,7 @@ class DocumentPage extends StatelessWidget {
                                         );
 
                                       },
-                                    ),
+                                    ),]
                                 ],
                               ),
                             ),
@@ -299,125 +331,144 @@ class DocumentPage extends StatelessWidget {
 
                       SizedBox(height: 8.0),
 
-                      StreamBuilder<QuerySnapshot>(
-
-                        stream: FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(uid)
-                            .collection('bills')
-                            .orderBy('createdAt', descending: true)
-                            .snapshots(),
-                        builder: (context, billSnapshot) {
-                          if (billSnapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                      FutureBuilder<String?>(
+                        future: _getAssetId(),
+                        builder: (context, assetSnapshot) {
+                          if (assetSnapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                           }
 
-                          if (billSnapshot.hasError) {
-                            return Center(child: Text("Error loading bills: ${billSnapshot.error}"));
+                          final assetId = assetSnapshot.data;
+
+                          if (assetId == null) {
+                            return Card(
+                              margin: EdgeInsets.symmetric(horizontal: 10.0),
+                              child: ListTile(
+                                title: Text("Utility Bills", style: TextStyle(fontWeight: FontWeight.bold)),
+                                subtitle: Text("No linked property found to view bills."),
+                              ),
+                            );
                           }
+                          return StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('assets')
+                                .doc(assetId)
+                                .collection('bills')
+                                .orderBy('createdAt', descending: true)
+                                .snapshots(),
+                            builder: (context, billSnapshot) {
+                              if (billSnapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              }
 
-                          final bills = billSnapshot.data!.docs;
+                              if (billSnapshot.hasError) {
+                                return Center(child: Text("Error loading bills: ${billSnapshot.error}"));
+                              }
 
-                          return Card(
-                            margin: EdgeInsets.symmetric(horizontal: 10.0),
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  leading: Icon(Icons.mail, color: Colors.deepPurple),
-                                  title: Text("Utility Bills (${bills.length})", style: TextStyle(fontWeight: FontWeight.bold)),
-                                  trailing: IconButton(
-                                    icon: Icon(Icons.add, color: Colors.deepPurple),
-                                    onPressed: () {
-                                      Navigator.push(context, MaterialPageRoute(builder: (_) => ScannerPage()));
-                                    },
-                                  ),
-                                ),
-                                Divider(),
+                              final bills = billSnapshot.data!.docs;
 
-                                if (bills.isEmpty)
-                                  const Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: Text("No Bills Recorded."),
-                                  ),
+                              return Card(
+                                margin: EdgeInsets.symmetric(horizontal: 10.0),
+                                child: Column(
+                                  children: [
+                                    ListTile(
+                                      leading: Icon(Icons.mail, color: Colors.deepPurple),
+                                      title: Text("Utility Bills (${bills.length})", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      trailing: IconButton(
+                                        icon: Icon(Icons.add, color: Colors.deepPurple),
+                                        onPressed: () {
+                                          Navigator.push(context, MaterialPageRoute(builder: (_) => ScannerPage()));
+                                        },
+                                      ),
+                                    ),
+                                    Divider(),
 
-                                ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: bills.length,
-                                  itemBuilder: (context, index) {
-                                    final bill = bills[index].data() as Map<String, dynamic>;
-                                    final docId = bills[index].id;
-                                    final billImageUrl = bill['imageUrl'] as String? ?? '';
+                                    if (bills.isEmpty)
+                                      const Padding(
+                                        padding: EdgeInsets.all(16.0),
+                                        child: Text("No Bills Recorded."),
+                                      ),
 
-                                    final billTitle = "${bill['month'] ?? 'Month N/A'} ${bill['year'] ?? ''}";
+                                    ListView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      itemCount: bills.length,
+                                      itemBuilder: (context, index) {
+                                        final bill = bills[index].data() as Map<String, dynamic>;
+                                        final docId = bills[index].id;
+                                        final billImageUrl = bill['imageUrl'] as String? ?? '';
 
-                                    return Column(
-                                      children: [
-                                        ListTile(
-                                          title: Text(billTitle),
-                                          subtitle: Text("Amount: ${bill['amount'] ?? 'N/A'} (Due: ${bill['date'] ?? 'N/A'})"),
-                                          trailing: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.delete, color: Colors.red),
-                                                onPressed: () async {
-                                                  if (billImageUrl.isNotEmpty) {
-                                                    await FirebaseStorage.instance.refFromURL(billImageUrl).delete();
-                                                  }
+                                        final billTitle = "${bill['month'] ?? 'Month N/A'} ${bill['year'] ?? ''}";
 
-                                                  await FirebaseFirestore.instance
-                                                      .collection('users').doc(uid)
-                                                      .collection('bills').doc(docId)
-                                                      .delete();
+                                        return Column(
+                                          children: [
+                                            ListTile(
+                                              title: Text(billTitle),
+                                              subtitle: Text("Amount: ${bill['amount'] ?? 'N/A'}  [ ${bill['type'] ?? 'N/A'} Bill ]"),
+                                              trailing: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                                    onPressed: () async {
+                                                      if (billImageUrl.isNotEmpty) {
+                                                        await FirebaseStorage.instance.refFromURL(billImageUrl).delete();
+                                                      }
 
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('$billTitle bill deleted.')),
-                                                  );
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                          onTap: () {
-                                            if (billImageUrl.isNotEmpty) {
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) => AlertDialog(
-                                                  content: Image.network(
-                                                    billImageUrl,
-                                                    fit: BoxFit.contain,
-                                                    loadingBuilder: (context, child, loadingProgress) {
-                                                      if (loadingProgress == null) return child;
-                                                      return SizedBox(
-                                                        height: 300,
-                                                        child: Center(child: CircularProgressIndicator()),
+                                                      await FirebaseFirestore.instance
+                                                          .collection('assets').doc(assetId)
+                                                          .collection('bills').doc(docId)
+                                                          .delete();
+
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text('Bill of $billTitle deleted successfully.')),
                                                       );
                                                     },
                                                   ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () => Navigator.pop(context),
-                                                      child: const Text('Close'),
+                                                ],
+                                              ),
+                                              onTap: () {
+                                                if (billImageUrl.isNotEmpty) {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) => AlertDialog(
+                                                      content: Image.network(
+                                                        billImageUrl,
+                                                        fit: BoxFit.contain,
+                                                        loadingBuilder: (context, child, loadingProgress) {
+                                                          if (loadingProgress == null) return child;
+                                                          return SizedBox(
+                                                            height: 300,
+                                                            child: Center(child: CircularProgressIndicator()),
+                                                          );
+                                                        },
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () => Navigator.pop(context),
+                                                          child: const Text('Close'),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
-                                                ),
-                                              );
-                                            } else {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('No image recorded for this bill.')),
-                                              );
-                                            }
-                                          },
-                                        ),
-                                        Divider(height: 1),
-                                      ],
-                                    );
-                                  },
+                                                  );
+                                                } else {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('No image recorded for this bill.')),
+                                                  );
+                                                }
+                                              },
+                                            ),
+                                            Divider(height: 1),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           );
-                        },
+                        }
                       ),
                     ],
                   );

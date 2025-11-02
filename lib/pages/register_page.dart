@@ -30,10 +30,29 @@ class RegisterPageState extends State<RegisterPage> {
       'ic': '',
       'address': '',
       'avatarUrl': '',
-      'billImageUrl': '',
       'contractImageUrl': '',
       'icImageUrl': '',
       'date': '',
+      'role': _selectedRole,
+      'landlordId': '',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    emailCtrl.clear();
+    passCtrl.clear();
+  }
+
+  Future<void> registerLandlord(String uid) async {
+    if (emailCtrl.text.isEmpty || passCtrl.text.isEmpty) return;
+
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'email': emailCtrl.text,
+      'name': '',
+      'contactNumber': '',
+      'ic': '',
+      'address': '',
+      'avatarUrl': '',
+      'icImageUrl': '',
       'role': _selectedRole,
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -143,10 +162,16 @@ class RegisterPageState extends State<RegisterPage> {
                     final uid = userRegistered.user?.uid;
 
                     if (uid != null){
+                      if (_selectedRole == "Tenant"){
+                        registerTenant(uid);
+                      }else if(_selectedRole == "Landlord"){
+                        registerLandlord(uid);
+                      }
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Register Successful")),
                       );
-                      registerTenant(uid);
+
                       Navigator.pop(context);
                     }
                   }catch(e){
