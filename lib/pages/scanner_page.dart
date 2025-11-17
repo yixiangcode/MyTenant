@@ -377,6 +377,7 @@ class _ScannerPageState extends State<ScannerPage> {
         ),
         centerTitle: true,
         backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
       ),
       backgroundColor: Colors.purple[50],
       body: Center(

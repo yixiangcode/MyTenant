@@ -35,7 +35,7 @@ class LandlordPage extends StatelessWidget {
               height: 40,
             ),
             const SizedBox(width: 10),
-            const Text('MyTenant for Landlord', style: TextStyle(color: Colors.white),),
+            const Text('MyTenant for Landlord', style: TextStyle(color: Colors.white, fontFamily: 'Pacifico'),),
           ],
         ),
         centerTitle: true,

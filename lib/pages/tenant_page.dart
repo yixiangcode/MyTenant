@@ -33,7 +33,7 @@ class TenantPage extends StatelessWidget {
               child: Image.asset('images/logo_white.png', height: 40),
             ),
             const SizedBox(width: 10),
-            const Text('MyTenant', style: TextStyle(color: Colors.white)),
+            const Text('MyTenant', style: TextStyle(color: Colors.white, fontFamily: 'Pacifico')),
           ],
         ),
         centerTitle: true,
@@ -342,7 +342,7 @@ class TenantPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => MaintenancePage()),
+                          MaterialPageRoute(builder: (_) => NotificationPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),
@@ -414,7 +414,7 @@ class TenantPage extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => MaintenancePage()),
+                          MaterialPageRoute(builder: (_) => NotificationPage()),
                         );
                       },
                       borderRadius: BorderRadius.circular(16),

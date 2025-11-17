@@ -56,6 +56,9 @@ class NotificationPage extends StatelessWidget {
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
+
+      backgroundColor: Colors.purple[50],
+
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('invites')
@@ -92,7 +95,7 @@ class NotificationPage extends StatelessWidget {
                 elevation: 2,
                 child: ListTile(
                   leading: const Icon(Icons.mail, color: Colors.indigo),
-                  title: const Text('Landlord Link Invitation'),
+                  title: const Text('Invitation'),
                   subtitle: Text('From: $landlordEmail'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

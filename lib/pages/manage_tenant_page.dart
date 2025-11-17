@@ -162,6 +162,7 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
         title: const Text('Tenants', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
       ),
 
       floatingActionButton: FloatingActionButton(

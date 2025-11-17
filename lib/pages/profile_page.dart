@@ -206,7 +206,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   );
 
                   Navigator.pop(context); // close dialog
-                  setState(() {}); // refresh
+                  setState(() {
+                    _isLoading = false;
+                  });
                 },
 
                 child: const Text("Save"),
@@ -238,6 +240,7 @@ class _ProfilePageState extends State<ProfilePage> {
         title: const Text('Profile', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
       ),
 
       body: SafeArea(
@@ -293,6 +296,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Text(
                       role,
                       style: TextStyle(
+                        color: Colors.orange,
                         fontFamily: 'Source Sans Pro',
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,

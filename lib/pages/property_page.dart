@@ -392,6 +392,7 @@ class _PropertyPageState extends State<PropertyPage> {
         title: const Text('Properties', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -434,7 +435,7 @@ class _PropertyPageState extends State<PropertyPage> {
                       : "Tenant: None";
 
                   return Card(
-                    margin: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     child: ListTile(
                       onTap: () {
                         Navigator.push(

@@ -58,7 +58,7 @@ class AuthWrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
+          return Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
             ),
@@ -74,9 +74,17 @@ class AuthWrapper extends StatelessWidget {
             builder: (context, roleSnapshot) {
 
               if (roleSnapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
+                return Scaffold(
                   body: Center(
-                    child: CircularProgressIndicator(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset('images/logo.png', width: 80, height: 80,),
+                        Text('MyTenant', style: TextStyle(fontFamily: 'Pacifico', fontSize: 15.0, fontWeight: FontWeight.bold,),),
+                        SizedBox(height : 15.0),
+                        CircularProgressIndicator(),
+                      ],
+                    ),
                   ),
                 );
               }
