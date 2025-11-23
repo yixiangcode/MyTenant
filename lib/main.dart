@@ -35,7 +35,7 @@ class TenantApp extends StatelessWidget {
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
-  Future<String?> _getUserRole(String uid) async {
+  Future<Map<String, dynamic>?> _getUserData(String uid) async {
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
@@ -43,22 +43,21 @@ class AuthWrapper extends StatelessWidget {
           .get();
 
       if (userDoc.exists && userDoc.data() != null) {
-        return (userDoc.data() as Map<String, dynamic>)['role'] as String?;
+        return userDoc.data() as Map<String, dynamic>?;
       }
     } catch (e) {
-      print("Error fetching user role: $e");
+      print("Error fetching user data: $e");
     }
-    return null; // cannot find document or error
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
+          return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
             ),
@@ -68,39 +67,45 @@ class AuthWrapper extends StatelessWidget {
         final user = snapshot.data;
 
         if (user != null) {
-
-          return FutureBuilder<String?>(
-            future: _getUserRole(user.uid),
-            builder: (context, roleSnapshot) {
-
-              if (roleSnapshot.connectionState == ConnectionState.waiting) {
+          return FutureBuilder<Map<String, dynamic>?>(
+            future: _getUserData(user.uid),
+            builder: (context, dataSnapshot) {
+              if (dataSnapshot.connectionState == ConnectionState.waiting) {
                 return Scaffold(
+                  backgroundColor: Colors.indigoAccent[200],
                   body: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset('images/logo.png', width: 80, height: 80,),
-                        Text('MyTenant', style: TextStyle(fontFamily: 'Pacifico', fontSize: 15.0, fontWeight: FontWeight.bold,),),
-                        SizedBox(height : 15.0),
-                        CircularProgressIndicator(),
+                        Image.asset('images/logo_white.png', width: 110, height: 110,),
+                        const Text('MyTenant', style: TextStyle(fontFamily: 'Pacifico', fontSize: 15.0, fontWeight: FontWeight.bold, color: Colors.white),),
+                        const SizedBox(height : 30.0),
+                        const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent),),
                       ],
                     ),
                   ),
                 );
               }
 
-              final role = roleSnapshot.data;
+              final userData = dataSnapshot.data;
+
+              if (userData == null || userData.isEmpty) {
+                return const Scaffold(body: Center(child: Text("User data not found or failed to load.")));
+              }
+
+              final role = userData['role'] as String?;
 
               if (role == 'Tenant') {
-                return TenantPage();
+                return TenantPage(userData: userData);
+              } else if (role == 'Landlord') {
+                return LandlordPage(userData: userData);
               } else {
-                return LandlordPage();
+                return const Scaffold(body: Center(child: Text("Invalid user role. Please contact support.")));
               }
             },
           );
 
         } else {
-          // User not login
           return const LoginPage();
         }
       },

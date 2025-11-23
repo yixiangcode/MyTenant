@@ -53,6 +53,7 @@ class NotificationPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
+        centerTitle: true,
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
@@ -78,7 +79,7 @@ class NotificationPage extends StatelessWidget {
           final invites = snapshot.data?.docs ?? [];
 
           if (invites.isEmpty) {
-            return const Center(child: Text('You have no pending invitations.'));
+            return const Center(child: Text('You have no pending notifications.'));
           }
 
           return ListView.builder(

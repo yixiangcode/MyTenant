@@ -199,9 +199,9 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
                 elevation: 2,
                 child: ListTile(
                     leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(18.0),
+                      borderRadius: BorderRadius.circular(8.0),
                       child: tenant['avatarUrl'] != null && tenant['avatarUrl'].isNotEmpty
-                          ? Image.network(tenant['avatarUrl'], width: 80.0, height: 80.0, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40))
+                          ? Image.network(tenant['avatarUrl'], width: 40.0, height: 40.0, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40))
                           : const Icon(Icons.person, size: 40, color: Colors.grey),
                     ),
                     title: Text(tenant['name'] ?? 'Name N/A', style: const TextStyle(fontWeight: FontWeight.bold)),

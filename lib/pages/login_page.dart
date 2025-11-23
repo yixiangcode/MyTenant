@@ -19,6 +19,7 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController passCtrl = TextEditingController();
 
   String errorMessage = "";
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -26,73 +27,67 @@ class LoginPageState extends State<LoginPage> {
       backgroundColor: Colors.grey[100],
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Hero(tag: 'logo', child: Image.asset('images/logo.png', width: 120, height: 120,)),
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 "Welcome to MyTenant",
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 30),
-
-              // Email Input
+              const SizedBox(height: 30),
               TextField(
                 controller: emailCtrl,
                 decoration: InputDecoration(
                   hintText: "Email",
-                  prefixIcon: Icon(Icons.email),
+                  prefixIcon: const Icon(Icons.email),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
                 ),
               ),
-              SizedBox(height: 16),
-
-              // Password Input
+              const SizedBox(height: 16),
               TextField(
                 controller: passCtrl,
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: "Password",
-                  prefixIcon: Icon(Icons.lock),
+                  prefixIcon: const Icon(Icons.lock),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
                 ),
               ),
-              SizedBox(height: 30),
-
+              const SizedBox(height: 30),
               if (errorMessage.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 10),
+                  padding: const EdgeInsets.only(bottom: 20),
                   child: Text(
                     errorMessage,
                     style: const TextStyle(color: Colors.red, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ),
-              SizedBox(height: 20),
-
-              // Login Button
               ElevatedButton(
-                onPressed: () async{
+                onPressed: _isLoading ? null : () async {
+                  setState(() {
+                    _isLoading = true;
+                    errorMessage = "";
+                  });
 
-                  // For testing purpose, quick login
                   if(emailCtrl.text.trim() == "tenant" || emailCtrl.text.trim() == "t"){
                     emailCtrl.text = "admin@tenant.com";
                     passCtrl.text = "123456";
-
                   }else if(emailCtrl.text.trim() == "landlord" || emailCtrl.text.trim() == "l"){
                     emailCtrl.text = "admin@landlord.com";
                     passCtrl.text = "123456";
@@ -107,47 +102,62 @@ class LoginPageState extends State<LoginPage> {
 
                       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
                       String? userRole = (userDoc.data() as Map<String, dynamic>?)?['role'] as String?;
+                      final userData = userDoc.data() as Map<String, dynamic>?;
 
                       if (userRole == "Tenant"){
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => TenantPage()),
+                          MaterialPageRoute(builder: (context) => TenantPage(userData: userData!)),
                         );
                       }else if(userRole == "Landlord"){
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => LandlordPage()),
+                          MaterialPageRoute(builder: (context) => LandlordPage(userData: userData!)),
                         );
                       }
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Login Successful")),
                       );
                     }
-                  }catch (e){
+                  } catch (e){
                     setState(() {
                       errorMessage = e.toString();
+                    });
+                  } finally {
+                    setState(() {
+                      _isLoading = false;
                     });
                   }
                 },
 
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 60, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                   backgroundColor: Colors.indigo,
+                  disabledBackgroundColor: Colors.indigo.withOpacity(0.5),
                 ),
-                child: Text("Login", style: TextStyle(fontSize: 16, color: Colors.white)),
+                child: _isLoading
+                    ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+                    : const Text("Login", style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => RegisterPage()),
+                    MaterialPageRoute(builder: (context) => const RegisterPage()),
                   );
                 },
-                child: Text(
+                child: const Text(
                   "Don't have an account? Register now",
                   style: TextStyle(color: Colors.indigo, fontSize: 14),
                 ),

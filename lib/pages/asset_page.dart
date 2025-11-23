@@ -5,15 +5,16 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tenant/pages/bill_page.dart';
+import 'package:tenant/pages/furniture_page.dart';
 
-class PropertyPage extends StatefulWidget {
-  const PropertyPage({super.key});
+class AssetPage extends StatefulWidget {
+  const AssetPage({super.key});
 
   @override
-  _PropertyPageState createState() => _PropertyPageState();
+  _AssetPageState createState() => _AssetPageState();
 }
 
-class _PropertyPageState extends State<PropertyPage> {
+class _AssetPageState extends State<AssetPage> {
   final TextEditingController nameCtrl = TextEditingController();
   final TextEditingController addressCtrl = TextEditingController();
   final TextEditingController tenantEmailCtrl = TextEditingController();
@@ -389,7 +390,7 @@ class _PropertyPageState extends State<PropertyPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Properties', style: TextStyle(color: Colors.white)),
+        title: const Text('Assets', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
@@ -441,7 +442,7 @@ class _PropertyPageState extends State<PropertyPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => BillPage(
+                            builder: (context) => FurniturePage(
                               assetId: assetId,
                               assetName: asset['name'],
                             ),
@@ -449,16 +450,33 @@ class _PropertyPageState extends State<PropertyPage> {
                         );
                       },
                       leading: imageUrl.isNotEmpty
-                          ? ClipRRect(borderRadius: BorderRadius.circular(8.0), child: Image.network(imageUrl, width: 80, height: 100, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),))
+                          ? ClipRRect(borderRadius: BorderRadius.circular(8.0), child: Image.network(imageUrl, width: 60, height: 60, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),))
                           : Image.asset('images/logo.png', height: 40),
 
                       title: Text(asset['name']),
                       subtitle: Text("${asset['address']}\nRent: RM ${asset['rent']}\n$tenantInfo"),
                       isThreeLine: true,
 
-                      trailing: IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.indigo),
-                        onPressed: () => showEditDialog(assetId, asset, tenantEmail),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.receipt_long, color: Colors.indigo),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BillPage(
+                                  assetId: assetId,
+                                  assetName: asset['name'],
+                                ),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.indigo),
+                            onPressed: () => showEditDialog(assetId, asset, tenantEmail),
+                          ),
+                        ],
                       ),
                     ),
                   );
