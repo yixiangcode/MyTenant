@@ -80,9 +80,15 @@ class ChatListPage extends StatelessWidget {
 
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    elevation: 5,
+
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(36.0),
+                    ),
+
                     child: ListTile(
                       leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(32.0),
                         child: tenantAvatar != null && tenantAvatar.isNotEmpty
                             ? Image.network(tenantAvatar, width: 40.0, height: 40.0, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40))
                             : const Icon(Icons.person, size: 40, color: Colors.grey),

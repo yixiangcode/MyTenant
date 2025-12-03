@@ -77,10 +77,10 @@ class AuthWrapper extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset('images/logo_white.png', width: 110, height: 110,),
-                        const Text('MyTenant', style: TextStyle(fontFamily: 'Pacifico', fontSize: 15.0, fontWeight: FontWeight.bold, color: Colors.white),),
+                        Image.asset('images/logo_white.png', width: 850, height: 85,),
+                        const Text('MyTenant', style: TextStyle(fontFamily: 'Pacifico', fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),),
                         const SizedBox(height : 30.0),
-                        const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent),),
+                        const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent)),
                       ],
                     ),
                   ),

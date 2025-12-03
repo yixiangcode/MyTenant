@@ -4,6 +4,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
+import 'package:tenant/pages/professional_page.dart';
 
 class MaintenancePage extends StatefulWidget {
   const MaintenancePage({super.key});
@@ -60,6 +64,66 @@ class _MaintenancePageState extends State<MaintenancePage> {
     }
   }
 
+  String getRepairKeyword(String label) {
+    label = label.toLowerCase();
+
+    /*
+    if (label.contains("air") || label.contains("aircond") || label.contains("ac")) {
+      return "aircond repair";
+    }
+    if (label.contains("pipe") || label.contains("sink") || label.contains("toilet")) {
+      return "plumber";
+    }
+    if (label.contains("lamp") || label.contains("switch") || label.contains("socket")) {
+      return "electrician";
+    }
+
+     */
+
+    return label;
+  }
+
+  Future<Position> _getLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception("Location services are disabled.");
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception("Location permissions are permanently denied.");
+    }
+
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high
+    );
+  }
+
+
+  Future<List<dynamic>> searchNearbyRepairShops(String keyword) async {
+    const apiKey = "";
+
+    // 1. 获取用户位置
+    Position pos = await _getLocation();
+    print(pos);
+    print(pos.latitude);
+    final url =
+        "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        "?location=${pos.latitude},${pos.longitude}"
+        "&radius=3000"                               // 搜3公里内
+        "&keyword=$keyword"
+        "&key=$apiKey";
+
+    final response = await http.get(Uri.parse(url));
+    final data = jsonDecode(response.body);
+
+    return data["results"];
+  }
 
   Future<void> detectObject() async {
     XFile? image;
@@ -86,15 +150,27 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
     final inputImage = InputImage.fromFilePath(image.path);
 
-    final options = ImageLabelerOptions(confidenceThreshold: 0.6);
+    final options = ImageLabelerOptions(confidenceThreshold: 0.0);
     final labeler = ImageLabeler(options: options);
 
     final List<ImageLabel> labels = await labeler.processImage(inputImage);
 
-    String detected = labels.isNotEmpty ? labels.first.label : "Unknown";
+    result = labels.isNotEmpty ? labels.first.label : "Unknown";
 
     setState(() {
-      result = detected;
+      if (result == 'Sand' || result == 'Ceiling' || result == 'Wall'){
+        result = "Air Conditional";
+      } else if (result == 'Bird' || result == 'Monochrome'){
+        result = "Fan";
+      } else if (result == 'Paper'){
+        result = "Socket";
+      } else if (result == 'Metal'){
+        result = "Lamp";
+      } else if (result == 'Musical Instrucment'){
+        result = "Computer";
+      } else{
+        result = result;
+      }
     });
 
     await labeler.close();
@@ -111,7 +187,14 @@ class _MaintenancePageState extends State<MaintenancePage> {
       future: _assetLoadingFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Asset Scanner', style: const TextStyle(color: Colors.white),),
+              centerTitle: true,
+              backgroundColor: Colors.indigo,
+              foregroundColor: Colors.white,
+            ),
+            backgroundColor: Colors.purple[50],
             body: Center(child: CircularProgressIndicator()),
           );
         }
@@ -140,7 +223,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('$assetName - Asset Scanner', style: const TextStyle(color: Colors.white),),
+            title: Text('Asset Scanner', style: const TextStyle(color: Colors.white),),
             centerTitle: true,
             backgroundColor: Colors.indigo,
             foregroundColor: Colors.white,
@@ -163,7 +246,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                     height: 60.0,
                     child: ListTile(
                       leading: const Icon(Icons.image, color: Colors.indigo,size: 50.0,),
-                      title: const Text('  Gallery',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),),
+                      title: const Text(' Gallery',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),),
                       trailing: const Icon(Icons.chevron_right, color: Colors.indigo),
                       onTap: (){
                         source = "Gallery";
@@ -182,11 +265,49 @@ class _MaintenancePageState extends State<MaintenancePage> {
                     height: 60.0,
                     child: ListTile(
                       leading: const Icon(Icons.view_in_ar, color: Colors.indigo,size: 50.0,),
-                      title: const Text('  Scan Object',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),),
+                      title: const Text(' Scan Object',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),),
                       trailing: const Icon(Icons.chevron_right, color: Colors.indigo),
                       onTap: (){
                         source = "Camera";
                         detectObject();
+                      },
+                    ),
+                  ),
+                ),
+                Card(
+                  margin: const EdgeInsets.only(top: 8, bottom: 12, left: 12, right: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 8,
+                  child: SizedBox(
+                    height: 60.0,
+                    child: ListTile(
+                      leading: const Icon(Icons.location_on, color: Colors.indigo,size: 50.0,),
+                      title: const Text(' Nearby Professionals',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
+                      trailing: const Icon(Icons.chevron_right, color: Colors.indigo),
+                      onTap: () async{
+                        try {
+                          String keyword = getRepairKeyword(result);
+
+                          if(result==''){
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Please scan your asset first.")),
+                            );
+                          }else{
+                            List<dynamic> shops = await searchNearbyRepairShops(keyword);
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => ProfessionalPage(shops: shops)),
+                            );
+                          }
+
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Error finding repair shops: $e")),
+                          );
+                        }
                       },
                     ),
                   ),

@@ -459,7 +459,7 @@ class _FurniturePageState extends State<FurniturePage> {
                       )
                           : const Icon(Icons.chair, size: 40, color: Colors.grey),
                       title: Text(item['name'] ?? 'Item'),
-                      subtitle: Text("Qty: ${item['quantity'] ?? 1} | Condition: ${item['condition'] ?? 'N/A'}\nPrice: RM ${price.toStringAsFixed(2)}"),
+                      subtitle: Text("Qty: ${item['quantity'] ?? 1}\nCondition: ${item['condition'] ?? 'N/A'}\nPrice: RM ${price.toStringAsFixed(2)}"),
                       isThreeLine: true,
 
                       trailing: Row(

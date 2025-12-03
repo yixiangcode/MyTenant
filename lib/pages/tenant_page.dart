@@ -174,30 +174,7 @@ class TenantPage extends StatelessWidget {
                   _buildGridItem(context, Icons.handyman, "Maintenance", () => MaintenancePage()),
                   _buildGridItem(context, Icons.local_atm, "Owing Records", () => NotificationPage()),
                   _buildGridItem(context, Icons.notifications, "Notification", () => NotificationPage()),
-                  Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 8,
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => ChatPage(receiverId: landlordId, receiverName: 'Chat with Landlord',)),
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(Icons.chat, size: 50, color: Colors.indigo),
-                            SizedBox(height: 12),
-                            Text("Chat", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
+                  _buildGridItem(context, Icons.chat, "Chat", () => ChatPage(receiverId: landlordId, receiverName: 'Chat with Landlord',)),
                 ],
               ),
             ],

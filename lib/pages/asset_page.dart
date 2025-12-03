@@ -333,7 +333,7 @@ class _AssetPageState extends State<AssetPage> {
                       alignment: Alignment.center,
                       child: _selectedImage != null
                           ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                          : const Text("Tap to Select Image"),
+                          : const Icon(Icons.add_photo_alternate),
                     ),
                   ),
                   const SizedBox(height: 15),

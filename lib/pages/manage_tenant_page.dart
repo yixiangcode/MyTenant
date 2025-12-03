@@ -196,7 +196,7 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
 
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                elevation: 2,
+                elevation: 3.0,
                 child: ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8.0),

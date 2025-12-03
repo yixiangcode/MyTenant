@@ -136,6 +136,10 @@ class LandlordPage extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
+                                "Email: $email",
+                                style: const TextStyle(fontSize: 16, color: Colors.indigo),
+                              ),
+                              Text(
                                 "Income: RM $estimatedIncome",
                                 style: const TextStyle(fontSize: 16, color: Colors.indigo),
                               ),
