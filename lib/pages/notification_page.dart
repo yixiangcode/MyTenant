@@ -92,8 +92,12 @@ class NotificationPage extends StatelessWidget {
               final landlordId = inviteData['landlordId'] as String;
 
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                elevation: 2,
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(36.0),
+                ),
+                elevation: 3.0,
+
                 child: ListTile(
                   leading: const Icon(Icons.mail, color: Colors.indigo),
                   title: const Text('Invitation'),

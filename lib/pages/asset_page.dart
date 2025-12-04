@@ -26,6 +26,7 @@ class _AssetPageState extends State<AssetPage> {
   final ImagePicker _picker = ImagePicker();
 
   String _editDialogMessage = '';
+  String? _selectedTenantId;
 
   @override
   void dispose() {
@@ -108,6 +109,22 @@ class _AssetPageState extends State<AssetPage> {
     }
   }
 
+  Future<List<Map<String, dynamic>>> _getLandlordTenants() async {
+    final landlordUid = FirebaseAuth.instance.currentUser?.uid;
+    if (landlordUid == null) return [];
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('landlordId', isEqualTo: landlordUid)
+        .get();
+
+    return querySnapshot.docs.map((doc) => {
+      'id': doc.id,
+      'email': doc.get('email') ?? 'No Email',
+      'name': doc.get('name') ?? doc.get('email') ?? 'Unknown Tenant',
+    }).toList();
+  }
+
   Future<void> updateAsset({
     required String assetId,
     String? oldImageUrl,
@@ -127,7 +144,7 @@ class _AssetPageState extends State<AssetPage> {
     });
 
     String newImageUrl = oldImageUrl ?? '';
-    String? newTenantId = null;
+    String? newTenantId = _selectedTenantId;
 
     try {
       if (_selectedImage != null) {
@@ -145,27 +162,19 @@ class _AssetPageState extends State<AssetPage> {
         }
       }
 
-      final tenantEmail = tenantEmailCtrl.text.trim();
+      final assetDoc = await FirebaseFirestore.instance.collection('assets').doc(assetId).get();
+      final oldTenantId = assetDoc.get('tenantId');
 
-      if (tenantEmail.isNotEmpty) {
-        final tenantQuery = await FirebaseFirestore.instance
-            .collection('users')
-            .where('email', isEqualTo: tenantEmail)
-            .limit(1)
-            .get();
+      if (oldTenantId != null && oldTenantId != newTenantId) {
+        await FirebaseFirestore.instance.collection('users').doc(oldTenantId).update({
+          'landlordId': FieldValue.delete(),
+        });
+      }
 
-        if (tenantQuery.docs.isEmpty) {
-          throw Exception("Tenant with email '$tenantEmail' not found.");
-        }
-
-        newTenantId = tenantQuery.docs.first.id;
-
+      if (newTenantId != null) {
         await FirebaseFirestore.instance.collection('users').doc(newTenantId).update({
           'landlordId': landlordUid,
         });
-
-      } else {
-        newTenantId = null;
       }
 
       Map<String, dynamic> updateData = {
@@ -214,90 +223,146 @@ class _AssetPageState extends State<AssetPage> {
 
     _selectedImage = null;
     _editDialogMessage = '';
+    _selectedTenantId = assetData['tenantId'];
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text("Edit Property"),
-            content: SingleChildScrollView(
-              child: Column(
-                children: [
-                  InkWell(
-                    onTap: () async {
-                      await _pickImage();
-                      setDialogState(() {});
-                    },
-                    child: Container(
-                      height: 120,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12.0),
-                        image: _selectedImage == null && assetData['imageUrl'] != null
-                            ? DecorationImage(
-                          image: NetworkImage(assetData['imageUrl']),
-                          fit: BoxFit.cover,
-                        )
-                            : null,
-                      ),
-                      alignment: Alignment.center,
-                      child: _selectedImage != null
-                          ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                          : assetData['imageUrl'] == null
-                          ? const Text("Tap to Select New Image")
-                          : const Text(""),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  TextField(controller: nameCtrl, decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),),
-                  const SizedBox(height: 15),
-                  TextField(controller: addressCtrl, decoration: InputDecoration(labelText: "Address", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),)),
-                  const SizedBox(height: 15),
-                  TextField(
-                    controller: tenantEmailCtrl,
-                    decoration: InputDecoration(
-                      labelText: "Email of Tenant",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 15),
-                  TextField(controller: rentCtrl, decoration: InputDecoration(labelText: "Monthly Rent", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),), keyboardType: TextInputType.number),
-                  const SizedBox(height: 15),
-                  TextField(controller: noteCtrl, decoration: InputDecoration(labelText: "Note", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),)),
-
-                  if (_editDialogMessage.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Text(_editDialogMessage, style: const TextStyle(color: Colors.red)),
-                    ),
+      builder: (context) {
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: _getLandlordTenants(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const AlertDialog(
+                content: SizedBox(
+                  height: 100,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              );
+            }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return AlertDialog(
+                title: const Text("Error"),
+                content: Text("Error loading tenants: ${snapshot.error ?? 'Unknown error'}"),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
                 ],
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+              );
+            }
 
-              _isLoading
-                  ? const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-                  : ElevatedButton(
-                  onPressed: () => updateAsset(
-                    assetId: assetId,
-                    oldImageUrl: assetData['imageUrl'],
-                    setDialogState: setDialogState,
+            final List<Map<String, dynamic>> tenants = snapshot.data!;
+
+            return StatefulBuilder(
+              builder: (context, setDialogState) {
+
+                List<DropdownMenuItem<String>> dropdownItems = [];
+
+                dropdownItems.add(
+                  const DropdownMenuItem<String>(
+                    value: null,
+                    child: Text("None"),
                   ),
-                  child: const Text("Save")
-              ),
-            ],
-          );
-        },
-      ),
+                );
+
+                for (var tenant in tenants) {
+                  dropdownItems.add(
+                    DropdownMenuItem<String>(
+                      value: tenant['id'],
+                      child: Text(tenant['email']),
+                    ),
+                  );
+                }
+
+                return AlertDialog(
+                  title: const Text("Edit Property"),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: () async {
+                            await _pickImage();
+                            setDialogState(() {});
+                          },
+                          child: Container(
+                            height: 120,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(12.0),
+                              image: _selectedImage == null && assetData['imageUrl'] != null
+                                  ? DecorationImage(
+                                image: NetworkImage(assetData['imageUrl']),
+                                fit: BoxFit.cover,
+                              )
+                                  : null,
+                            ),
+                            alignment: Alignment.center,
+                            child: _selectedImage != null
+                                ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                                : assetData['imageUrl'] == null
+                                ? const Text("Tap to Select New Image")
+                                : const Text(""),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        TextField(controller: nameCtrl, decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),),
+                        const SizedBox(height: 15),
+                        TextField(controller: addressCtrl, decoration: InputDecoration(labelText: "Address", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),)),
+                        const SizedBox(height: 15),
+
+                        DropdownButtonFormField<String>(
+                          value: _selectedTenantId,
+                          decoration: InputDecoration(
+                            labelText: "Assigned Tenant",
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                          ),
+                          items: dropdownItems,
+                          onChanged: (String? newValue) {
+                            setDialogState(() {
+                              _selectedTenantId = newValue;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(height: 15),
+                        TextField(controller: rentCtrl, decoration: InputDecoration(labelText: "Monthly Rent", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),), keyboardType: TextInputType.number),
+                        const SizedBox(height: 15),
+                        TextField(controller: noteCtrl, decoration: InputDecoration(labelText: "Note", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),)),
+
+                        if (_editDialogMessage.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(_editDialogMessage, style: const TextStyle(color: Colors.red)),
+                          ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+
+                    _isLoading
+                        ? const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : ElevatedButton(
+                        onPressed: () => updateAsset(
+                          assetId: assetId,
+                          oldImageUrl: assetData['imageUrl'],
+                          setDialogState: setDialogState,
+                        ),
+                        child: const Text("Save")
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
     ).then((_) {
-      setState(() {});
+      setState(() {
+        _selectedTenantId = null;
+      });
     });
   }
 
@@ -328,12 +393,12 @@ class _AssetPageState extends State<AssetPage> {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12.0),
+                        borderRadius: BorderRadius.circular(30.0),
                       ),
                       alignment: Alignment.center,
                       child: _selectedImage != null
                           ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                          : const Icon(Icons.add_photo_alternate),
+                          : const Icon(Icons.add_photo_alternate_rounded, size: 60.0,),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -437,7 +502,15 @@ class _AssetPageState extends State<AssetPage> {
 
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    elevation: 3.0,
                     child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+
                       onTap: () {
                         Navigator.push(
                           context,
@@ -450,7 +523,7 @@ class _AssetPageState extends State<AssetPage> {
                         );
                       },
                       leading: imageUrl.isNotEmpty
-                          ? ClipRRect(borderRadius: BorderRadius.circular(8.0), child: Image.network(imageUrl, width: 60, height: 60, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),))
+                          ? ClipRRect(borderRadius: BorderRadius.circular(12.0), child: Image.network(imageUrl, width: 60, height: 60, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),))
                           : Image.asset('images/logo.png', height: 40),
 
                       title: Text(asset['name']),

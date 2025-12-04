@@ -195,11 +195,18 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
               final tenant = tenants[index].data() as Map<String, dynamic>;
 
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
                 elevation: 3.0,
                 child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+
                     leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
+                      borderRadius: BorderRadius.circular(30.0),
                       child: tenant['avatarUrl'] != null && tenant['avatarUrl'].isNotEmpty
                           ? Image.network(tenant['avatarUrl'], width: 40.0, height: 40.0, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40))
                           : const Icon(Icons.person, size: 40, color: Colors.grey),
@@ -222,7 +229,8 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
                           SnackBar(content: Text('${tenant['name']} removed successfully!')),
                         );
                       },
-                    )
+                    ),
+                    onTap: (){},
                 ),
               );
             },

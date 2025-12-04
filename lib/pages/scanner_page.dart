@@ -392,9 +392,9 @@ class _ScannerPageState extends State<ScannerPage> {
                 Column(
                   children: [
                     Card(
-                      margin: const EdgeInsets.all(25),
+                      margin: const EdgeInsets.all(15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       elevation: 8,
                       child: InkWell(
@@ -402,7 +402,7 @@ class _ScannerPageState extends State<ScannerPage> {
                           _documentType = 'Identity Card';
                           _pickImage();
                         },
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -448,9 +448,9 @@ class _ScannerPageState extends State<ScannerPage> {
                     ),
 
                     Card(
-                      margin: const EdgeInsets.all(25),
+                      margin: const EdgeInsets.all(15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       elevation: 8,
                       child: InkWell(
@@ -458,7 +458,7 @@ class _ScannerPageState extends State<ScannerPage> {
                           _documentType = 'Contract';
                           _pickImage();
                         },
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -504,9 +504,9 @@ class _ScannerPageState extends State<ScannerPage> {
                     ),
 
                     Card(
-                      margin: const EdgeInsets.all(25),
+                      margin: const EdgeInsets.all(15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       elevation: 8,
                       child: InkWell(
@@ -515,7 +515,7 @@ class _ScannerPageState extends State<ScannerPage> {
                           _selectedBillType = 'Electric';
                           _pickImage();
                         },
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -561,9 +561,9 @@ class _ScannerPageState extends State<ScannerPage> {
                     ),
 
                     Card(
-                      margin: const EdgeInsets.all(25),
+                      margin: const EdgeInsets.all(15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       elevation: 8,
                       child: InkWell(
@@ -572,7 +572,7 @@ class _ScannerPageState extends State<ScannerPage> {
                           _selectedBillType = 'Water';
                           _pickImage();
                         },
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(30),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(

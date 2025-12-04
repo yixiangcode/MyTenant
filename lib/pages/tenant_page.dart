@@ -113,9 +113,9 @@ class TenantPage extends StatelessWidget {
               Card(
                 color: Colors.indigoAccent[100],
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(30),
                 ),
-                elevation: 8,
+                elevation: 6.0,
                 child: InkWell(
                   onTap: () {
                     Navigator.push(
@@ -123,7 +123,7 @@ class TenantPage extends StatelessWidget {
                       MaterialPageRoute(builder: (_) => ProfilePage()),
                     );
                   },
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(30),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
@@ -187,9 +187,9 @@ class TenantPage extends StatelessWidget {
   Widget _buildGridItem(BuildContext context, IconData icon, String title, Widget Function() targetPage) {
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(30),
       ),
-      elevation: 8,
+      elevation: 6.0,
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -197,7 +197,7 @@ class TenantPage extends StatelessWidget {
             MaterialPageRoute(builder: (_) => targetPage()),
           );
         },
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(30),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(

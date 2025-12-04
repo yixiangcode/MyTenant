@@ -74,13 +74,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       height: 120,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.blue[200],
-                        borderRadius: BorderRadius.circular(12.0),
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(30.0),
                       ),
                       alignment: Alignment.center,
                       child: _selectedImage != null
                           ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                          : const Text("Tap to Select Image"),
+                          : const Icon(Icons.add_photo_alternate_rounded, size: 60.0,),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -198,6 +198,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     'ic': icCtrl.text.trim(),
                     'email': emailCtrl.text.trim(),
                     'contactNumber': phoneCtrl.text.trim(),
+                    'address': addressCtrl.text.trim(),
                     'avatarUrl': avatarUrl,
                   });
 
@@ -253,7 +254,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   return const SizedBox(
                     width: double.infinity,
                     child: Center(
-                      child: CircularProgressIndicator(), // Loading
+                      child: CircularProgressIndicator(),
                     ),
                   );
                 }

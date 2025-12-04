@@ -7,7 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:tenant/pages/notification_page.dart';
 import 'package:tenant/pages/professional_page.dart';
+import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
 
 class MaintenancePage extends StatefulWidget {
   const MaintenancePage({super.key});
@@ -21,9 +23,13 @@ class _MaintenancePageState extends State<MaintenancePage> {
   String result = "";
   File? pickedImage;
   String source = "";
+  final TextEditingController searchCtrl = TextEditingController();
 
   Map<String, String>? _tenantAsset;
   Future<void>? _assetLoadingFuture;
+
+  bool _isSearching = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -108,14 +114,12 @@ class _MaintenancePageState extends State<MaintenancePage> {
   Future<List<dynamic>> searchNearbyRepairShops(String keyword) async {
     const apiKey = "";
 
-    // 1. 获取用户位置
     Position pos = await _getLocation();
-    print(pos);
-    print(pos.latitude);
+
     final url =
         "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
         "?location=${pos.latitude},${pos.longitude}"
-        "&radius=3000"                               // 搜3公里内
+        "&radius=3000"
         "&keyword=$keyword"
         "&key=$apiKey";
 
@@ -145,12 +149,28 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
     setState(() {
       pickedImage = File(image!.path);
-      result = "Processing...";
+      result = "Loading...";
     });
 
     final inputImage = InputImage.fromFilePath(image.path);
 
-    final options = ImageLabelerOptions(confidenceThreshold: 0.0);
+
+    final modelName = 'Appliances';
+    final response = await FirebaseModelDownloader.instance.getModel(
+      modelName,
+      FirebaseModelDownloadType.latestModel,
+    );
+
+    // 2. 获取下载模型的路径
+    final modelPath = response.file.path;
+
+    // 3. 使用 FirebaseImageLabelerOptions
+    final options = LocalLabelerOptions(
+      modelPath: modelPath,
+      confidenceThreshold: 0.0,
+    );
+
+
     final labeler = ImageLabeler(options: options);
 
     final List<ImageLabel> labels = await labeler.processImage(inputImage);
@@ -158,16 +178,18 @@ class _MaintenancePageState extends State<MaintenancePage> {
     result = labels.isNotEmpty ? labels.first.label : "Unknown";
 
     setState(() {
-      if (result == 'Sand' || result == 'Ceiling' || result == 'Wall'){
-        result = "Air Conditional";
-      } else if (result == 'Bird' || result == 'Monochrome'){
+      if (result == 'space heater' || result == 'letter opener' || result == 'modem' || result == 'medicine chest' || result == 'bath towel' || result == 'microwave'){
+        result = "Aircond";
+      } else if (result == 'frying pan' || result == 'electric fan'){
         result = "Fan";
-      } else if (result == 'Paper'){
-        result = "Socket";
-      } else if (result == 'Metal'){
+      } else if (result == 'toilet seat'){
+        result = "Toilet";
+      } else if (result == 'washbasin'){
+        result = "Sink";
+      } else if (result == 'solar dish' || result == 'abacus' || result == 'shower curtain' || result == 'spotlight' || result == 'lampshade' || result == 'rule'){
         result = "Lamp";
-      } else if (result == 'Musical Instrucment'){
-        result = "Computer";
+      } else if (result == 'Envelope' || result == 'joystick' || result == 'switch'){
+        result = "Socket";
       } else{
         result = result;
       }
@@ -189,7 +211,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(
-              title: Text('Asset Scanner', style: const TextStyle(color: Colors.white),),
+              title: Text('Asset Problem Scanner', style: const TextStyle(color: Colors.white),),
               centerTitle: true,
               backgroundColor: Colors.indigo,
               foregroundColor: Colors.white,
@@ -223,7 +245,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Asset Scanner', style: const TextStyle(color: Colors.white),),
+            title: Text('Asset Problem Scanner', style: const TextStyle(color: Colors.white),),
             centerTitle: true,
             backgroundColor: Colors.indigo,
             foregroundColor: Colors.white,
@@ -231,87 +253,175 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
           backgroundColor: Colors.purple[50],
 
-          body: Padding(
+          body: SingleChildScrollView(
             padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Card(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8, left: 12, right: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 8,
-                  child: SizedBox(
-                    height: 60.0,
-                    child: ListTile(
-                      leading: const Icon(Icons.image, color: Colors.indigo,size: 50.0,),
-                      title: const Text(' Gallery',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),),
-                      trailing: const Icon(Icons.chevron_right, color: Colors.indigo),
-                      onTap: (){
-                        source = "Gallery";
-                        detectObject();
-                      },
+                SizedBox(height: 8.0,),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: searchCtrl,
+                        decoration: InputDecoration(
+                          hintText: "Search professionals...",
+                          prefixIcon: const Icon(Icons.search),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Card(
-                  margin: const EdgeInsets.only(top: 8, bottom: 12, left: 12, right: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 8,
-                  child: SizedBox(
-                    height: 60.0,
-                    child: ListTile(
-                      leading: const Icon(Icons.view_in_ar, color: Colors.indigo,size: 50.0,),
-                      title: const Text(' Scan Object',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 23),),
-                      trailing: const Icon(Icons.chevron_right, color: Colors.indigo),
-                      onTap: (){
-                        source = "Camera";
-                        detectObject();
-                      },
-                    ),
-                  ),
-                ),
-                Card(
-                  margin: const EdgeInsets.only(top: 8, bottom: 12, left: 12, right: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 8,
-                  child: SizedBox(
-                    height: 60.0,
-                    child: ListTile(
-                      leading: const Icon(Icons.location_on, color: Colors.indigo,size: 50.0,),
-                      title: const Text(' Nearby Professionals',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
-                      trailing: const Icon(Icons.chevron_right, color: Colors.indigo),
-                      onTap: () async{
-                        try {
-                          String keyword = getRepairKeyword(result);
 
-                          if(result==''){
+                    SizedBox(width: 10.0,),
+                    ElevatedButton(
+                        onPressed: _isSearching ? null : () async{
+                          try {
+                            if(searchCtrl.text.trim().isEmpty){
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Please enter the keyword first.")),
+                              );
+                            }else{
+                              setState(() {
+                                _isSearching = true;
+                              });
+
+                              List<dynamic> shops = await searchNearbyRepairShops(searchCtrl.text.trim());
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => ProfessionalPage(shops: shops)),
+                              );
+                            }
+
+                          } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Please scan your asset first.")),
+                              SnackBar(content: Text("Error finding repair shops: $e")),
                             );
-                          }else{
-                            List<dynamic> shops = await searchNearbyRepairShops(keyword);
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => ProfessionalPage(shops: shops)),
-                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isSearching = false;
+                              });
+                            }
                           }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(),
+                          minimumSize: const Size(50, 50),
+                          backgroundColor: Colors.white,
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: _isSearching
+                            ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                            : const Icon(Icons.search, size: 30)
+                    )
+                  ],
+                ),
 
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Error finding repair shops: $e")),
-                          );
-                        }
-                      },
+                SizedBox(height: 14.0,),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          source = "Gallery";
+                          detectObject();
+                        },
+                        icon: const Icon(Icons.image, color: Colors.indigo,size: 30.0,),
+                        label: const Text('Gallery',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          foregroundColor: Colors.black,
+                        ),
+                      ),
                     ),
+
+                    SizedBox(width: 16.0,),
+
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          source = "Camera";
+                          detectObject();
+                        },
+                        icon: const Icon(Icons.view_in_ar, color: Colors.indigo,size: 30.0,),
+                        label: const Text('Scan',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          foregroundColor: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 16.0,),
+
+                ElevatedButton.icon(
+                  onPressed: _isLoading ? null : () async {
+                    if(result == ''){
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Please scan your asset first.")),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      _isLoading = true;
+                    });
+
+                    try {
+                      String keyword = getRepairKeyword(result);
+                      List<dynamic> shops = await searchNearbyRepairShops(keyword);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ProfessionalPage(shops: shops)),
+                      );
+
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Error finding repair shops: $e")),
+                      );
+                    } finally {
+                      if (mounted) {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                      }
+                    }
+                  },
+                  icon: _isLoading
+                      ? const SizedBox(width: 25, height: 25, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
+                      : const Icon(Icons.location_on, color: Colors.indigo,size: 30.0,),
+                  label: const Text('Search Professionals',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    foregroundColor: Colors.black,
                   ),
                 ),
+
+                SizedBox(height: 20.0,),
 
                 if (pickedImage != null || result.isNotEmpty)
                   Padding(
@@ -322,6 +432,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                           ClipRRect(borderRadius: BorderRadius.circular(18.0), child: Image.file(pickedImage!, height: 150)),
                         const SizedBox(height: 10),
                         Card(
+                          elevation: 3.0,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
@@ -342,7 +453,8 @@ class _MaintenancePageState extends State<MaintenancePage> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo),
                   ),
                 ),
-                Expanded(
+                SizedBox(
+                  height: 300,
                   child: FurnitureMaintenanceList(assetId: assetId),
                 ),
               ],
@@ -386,7 +498,16 @@ class FurnitureMaintenanceList extends StatelessWidget {
 
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              elevation: 3.0,
+
               child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+
                   leading: imageUrl.isNotEmpty
                       ? ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),

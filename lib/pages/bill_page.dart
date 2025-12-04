@@ -44,10 +44,20 @@ class BillPage extends StatelessWidget {
               final billType = bill['type'] ?? 'Utility Bill';
               final billTitle = "$billType (${bill['month'] ?? 'N/A'} ${bill['year'] ?? ''})";
 
-              return ListTile(
-                title: Text(billTitle),
-                subtitle: Text("Amount: ${bill['amount'] ?? 'N/A'}"),
-                trailing: const Icon(Icons.chevron_right),
+              return Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                elevation: 3.0,
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  title: Text(billTitle),
+                  subtitle: Text("Amount: ${bill['amount'] ?? 'N/A'}"),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: (){},
+                ),
               );
             },
           );

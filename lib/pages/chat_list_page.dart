@@ -79,7 +79,7 @@ class ChatListPage extends StatelessWidget {
                   }
 
                   return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     elevation: 5,
 
                     shape: RoundedRectangleBorder(
@@ -87,14 +87,21 @@ class ChatListPage extends StatelessWidget {
                     ),
 
                     child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(32.0),
+                      ),
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(32.0),
                         child: tenantAvatar != null && tenantAvatar.isNotEmpty
                             ? Image.network(tenantAvatar, width: 40.0, height: 40.0, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40))
                             : const Icon(Icons.person, size: 40, color: Colors.grey),
                       ),
-                      title: Text(tenantName),
+                      title: Text(tenantName, style: TextStyle(fontWeight: FontWeight.bold),),
                       subtitle: Text("Property: $propertyName"),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.more_vert, color: Colors.indigo),
+                        onPressed: () {},
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,

@@ -251,7 +251,7 @@ class _FurniturePageState extends State<FurniturePage> {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12.0),
+                        borderRadius: BorderRadius.circular(30.0),
                         image: _selectedImage != null
                             ? DecorationImage(
                           image: FileImage(_selectedImage!),
@@ -261,7 +261,7 @@ class _FurniturePageState extends State<FurniturePage> {
                       ),
                       alignment: Alignment.center,
                       child: _selectedImage == null
-                          ? const Text("Tap to Select Image")
+                          ? const Icon(Icons.add_photo_alternate_rounded, size: 60.0,)
                           : null,
                     ),
                   ),
@@ -444,11 +444,14 @@ class _FurniturePageState extends State<FurniturePage> {
                   final double price = item['price'] as double? ?? 0.0;
 
                   return Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(36.0),
+                    ),
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     child: ListTile(
                       leading: imageUrl.isNotEmpty
                           ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(12.0),
                         child: Image.network(
                           imageUrl,
                           width: 60,
