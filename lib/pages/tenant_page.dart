@@ -66,7 +66,7 @@ class TenantPage extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.account_circle),
+              leading: const Icon(Icons.account_circle_rounded),
               title: const Text('Profile'),
               onTap: () {
                 Navigator.push(
@@ -76,17 +76,17 @@ class TenantPage extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.info),
+              leading: const Icon(Icons.info_rounded),
               title: const Text('About'),
               onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.help),
+              leading: const Icon(Icons.help_rounded),
               title: const Text('Help'),
               onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.logout),
+              leading: const Icon(Icons.logout_rounded),
               title: const Text('Logout'),
               onTap: () {
                 FirebaseAuth.instance.signOut();
@@ -169,12 +169,12 @@ class TenantPage extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _buildGridItem(context, Icons.document_scanner, "Scan Document", () => ScannerPage()),
-                  _buildGridItem(context, Icons.article, "View Document", () => DocumentPage()),
-                  _buildGridItem(context, Icons.handyman, "Maintenance", () => MaintenancePage()),
-                  _buildGridItem(context, Icons.local_atm, "Owing Records", () => NotificationPage()),
-                  _buildGridItem(context, Icons.notifications, "Notification", () => NotificationPage()),
-                  _buildGridItem(context, Icons.chat, "Chat", () => ChatPage(receiverId: landlordId, receiverName: 'Chat with Landlord',)),
+                  _buildGridItem(context, Icons.document_scanner_rounded, "Scan Document", () => ScannerPage()),
+                  _buildGridItem(context, Icons.description_rounded, "View Document", () => DocumentPage()),
+                  _buildGridItem(context, Icons.handyman_rounded, "Maintenance", () => MaintenancePage()),
+                  _buildGridItem(context, Icons.forum_rounded, "Chat", () => ChatPage(receiverId: landlordId, receiverName: 'Chat with Landlord',)),
+                  _buildGridItem(context, Icons.local_atm_rounded, "Owing Records", () => NotificationPage()),
+                  _buildGridItem(context, Icons.notifications_rounded, "Notification", () => NotificationPage()),
                 ],
               ),
             ],

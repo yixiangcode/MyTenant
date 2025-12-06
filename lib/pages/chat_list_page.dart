@@ -30,6 +30,7 @@ class ChatListPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chat Rooms', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
@@ -83,7 +84,7 @@ class ChatListPage extends StatelessWidget {
                     elevation: 5,
 
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(36.0),
+                      borderRadius: BorderRadius.circular(32.0),
                     ),
 
                     child: ListTile(

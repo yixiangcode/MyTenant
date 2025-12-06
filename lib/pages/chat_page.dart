@@ -32,6 +32,15 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
+    if (widget.receiverId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error: Please accept landlord invitation first.')),
+        );
+      }
+      return;
+    }
+
     final String messageText = _messageController.text.trim();
     _messageController.clear();
 
@@ -127,7 +136,9 @@ class _ChatPageState extends State<ChatPage> {
                 fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20),
               ),
-              onSubmitted: (value) => sendMessage(), // Press enter to send
+              keyboardType: TextInputType.multiline,
+              maxLines: null,
+              //onSubmitted: (value) => sendMessage(), // Press enter to send
             ),
           ),
           const SizedBox(width: 8),

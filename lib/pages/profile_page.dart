@@ -309,7 +309,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
                         leading: Icon(
-                          Icons.account_box,
+                          Icons.account_box_rounded,
                           color: Colors.deepPurple,
                         ),
                         title: Text(
@@ -331,7 +331,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Card(
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
-                        leading: Icon(Icons.badge, color: Colors.deepPurple),
+                        leading: Icon(Icons.badge_rounded, color: Colors.deepPurple),
                         title: Text(
                           "IC Number",
                           style: TextStyle(fontWeight: FontWeight.bold),
@@ -350,7 +350,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Card(
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
-                        leading: Icon(Icons.mail, color: Colors.deepPurple),
+                        leading: Icon(Icons.mail_rounded, color: Colors.deepPurple),
                         title: Text(
                           "Email",
                           style: TextStyle(fontWeight: FontWeight.bold),
@@ -370,7 +370,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Card(
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
-                        leading: Icon(Icons.phone, color: Colors.deepPurple),
+                        leading: Icon(Icons.phone_rounded, color: Colors.deepPurple),
                         title: Text(
                           "Phone",
                           style: TextStyle(fontWeight: FontWeight.bold),
@@ -390,7 +390,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Card(
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
-                        leading: Icon(Icons.person, color: Colors.deepPurple),
+                        leading: Icon(Icons.person_rounded, color: Colors.deepPurple),
                         title: Text(
                           "Role",
                           style: TextStyle(fontWeight: FontWeight.bold),
@@ -410,7 +410,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Card(
                       margin: EdgeInsets.symmetric(horizontal: 10.0),
                       child: ListTile(
-                        leading: Icon(Icons.location_on, color: Colors.deepPurple),
+                        leading: Icon(Icons.location_on_rounded, color: Colors.deepPurple),
                         title: Text(
                           "Address",
                           style: TextStyle(fontWeight: FontWeight.bold),

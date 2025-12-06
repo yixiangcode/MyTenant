@@ -99,8 +99,11 @@ class NotificationPage extends StatelessWidget {
                 elevation: 3.0,
 
                 child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(36.0),
+                  ),
                   leading: const Icon(Icons.mail, color: Colors.indigo),
-                  title: const Text('Invitation'),
+                  title: const Text('New Invitation'),
                   subtitle: Text('From: $landlordEmail'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -120,6 +123,7 @@ class NotificationPage extends StatelessWidget {
                       ),
                     ],
                   ),
+                  onTap: (){},
                 ),
               );
             },

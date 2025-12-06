@@ -108,7 +108,7 @@ class DocumentPage extends StatelessWidget {
                             children: [
                               ListTile(
                                 leading: Icon(
-                                  Icons.badge,
+                                  Icons.badge_rounded,
                                   color: Colors.deepPurple,
                                 ),
                                 title: Text(
@@ -120,7 +120,7 @@ class DocumentPage extends StatelessWidget {
                                   children: [
                                     if(icImageUrl.isEmpty)
                                       IconButton(
-                                        icon: Icon(Icons.add_a_photo),
+                                        icon: Icon(Icons.add_a_photo_rounded),
                                         color: Colors.deepPurple,
                                         onPressed: () {
                                           Navigator.pushReplacement(
@@ -132,7 +132,7 @@ class DocumentPage extends StatelessWidget {
 
                                     if(icImageUrl.isNotEmpty)...[
                                       IconButton(
-                                        icon: Icon(Icons.edit),
+                                        icon: Icon(Icons.edit_rounded),
                                         color: Colors.deepPurple,
                                         onPressed: () {
                                           Navigator.pushReplacement(
@@ -142,7 +142,7 @@ class DocumentPage extends StatelessWidget {
                                         },
                                       ),
                                       IconButton(
-                                        icon: Icon(Icons.delete, color: Colors.red),
+                                        icon: Icon(Icons.delete_rounded, color: Colors.red),
                                         onPressed: () async {
                                           Reference storageRef = FirebaseStorage.instance.refFromURL(icImageUrl);
                                           await storageRef.delete();
@@ -206,7 +206,7 @@ class DocumentPage extends StatelessWidget {
                                           errorBuilder:
                                               (context, error, stackTrace) =>
                                                   const Icon(
-                                                    Icons.broken_image,
+                                                    Icons.broken_image_rounded,
                                                     size: 50,
                                                   ),
                                         ),
@@ -224,7 +224,7 @@ class DocumentPage extends StatelessWidget {
                             children: [
                               ListTile(
                                 leading: Icon(
-                                  Icons.description,
+                                  Icons.description_rounded,
                                   color: Colors.deepPurple,
                                 ),
                                 title: Text(
@@ -236,7 +236,7 @@ class DocumentPage extends StatelessWidget {
                                   children: [
                                     if(contractImageUrl.isEmpty)
                                       IconButton(
-                                        icon: Icon(Icons.add_a_photo),
+                                        icon: Icon(Icons.add_a_photo_rounded),
                                         color: Colors.deepPurple,
                                         onPressed: () {
                                           Navigator.push(
@@ -248,7 +248,7 @@ class DocumentPage extends StatelessWidget {
 
                                     if(contractImageUrl.isNotEmpty)...[
                                       IconButton(
-                                        icon: Icon(Icons.edit),
+                                        icon: Icon(Icons.edit_rounded),
                                         color: Colors.deepPurple,
                                         onPressed: () {
                                           Navigator.push(
@@ -258,7 +258,7 @@ class DocumentPage extends StatelessWidget {
                                         },
                                       ),
                                       IconButton(
-                                        icon: Icon(Icons.delete, color: Colors.red),
+                                        icon: Icon(Icons.delete_rounded, color: Colors.red),
                                         onPressed: () async {
                                           Reference storageRef = FirebaseStorage.instance.refFromURL(contractImageUrl);
                                           await storageRef.delete();
@@ -322,7 +322,7 @@ class DocumentPage extends StatelessWidget {
                                     errorBuilder:
                                         (context, error, stackTrace) =>
                                     const Icon(
-                                      Icons.broken_image,
+                                      Icons.broken_image_rounded,
                                       size: 50,
                                     ),
                                   ),
@@ -347,6 +347,7 @@ class DocumentPage extends StatelessWidget {
                               return Card(
                                 margin: EdgeInsets.symmetric(horizontal: 10.0),
                                 child: ListTile(
+                                  leading: Icon(Icons.receipt_long_rounded, color: Colors.deepPurple),
                                   title: Text("Utility Bills", style: TextStyle(fontWeight: FontWeight.bold)),
                                   subtitle: Text("No linked property found to view bills."),
                                 ),
@@ -375,10 +376,10 @@ class DocumentPage extends StatelessWidget {
                                   child: Column(
                                     children: [
                                       ListTile(
-                                        leading: Icon(Icons.receipt_long, color: Colors.deepPurple),
+                                        leading: Icon(Icons.receipt_long_rounded, color: Colors.deepPurple),
                                         title: Text("Utility Bills (${bills.length})", style: TextStyle(fontWeight: FontWeight.bold)),
                                         trailing: IconButton(
-                                          icon: Icon(Icons.add, color: Colors.deepPurple),
+                                          icon: Icon(Icons.add_rounded, color: Colors.deepPurple),
                                           onPressed: () {
                                             Navigator.push(context, MaterialPageRoute(builder: (_) => ScannerPage()));
                                           },
@@ -412,7 +413,7 @@ class DocumentPage extends StatelessWidget {
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
                                                     IconButton(
-                                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                                      icon: const Icon(Icons.delete_rounded, color: Colors.red),
                                                       onPressed: () async {
                                                         if (billImageUrl.isNotEmpty) {
                                                           await FirebaseStorage.instance.refFromURL(billImageUrl).delete();

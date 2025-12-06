@@ -239,7 +239,7 @@ class _FurniturePageState extends State<FurniturePage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: Text("Add New Item to ${widget.assetName}"),
+            title: Text("Add New Furniture"),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -411,7 +411,8 @@ class _FurniturePageState extends State<FurniturePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.assetName} - Furniture'),
+        title: Text('Furniture of ${widget.assetName}'),
+        centerTitle: true,
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
@@ -449,6 +450,10 @@ class _FurniturePageState extends State<FurniturePage> {
                     ),
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(36.0),
+                      ),
+
                       leading: imageUrl.isNotEmpty
                           ? ClipRRect(
                         borderRadius: BorderRadius.circular(12.0),
@@ -457,10 +462,10 @@ class _FurniturePageState extends State<FurniturePage> {
                           width: 60,
                           height: 60,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 30),
+                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image_rounded, size: 30),
                         ),
                       )
-                          : const Icon(Icons.chair, size: 40, color: Colors.grey),
+                          : const Icon(Icons.chair_rounded, size: 40, color: Colors.grey),
                       title: Text(item['name'] ?? 'Item'),
                       subtitle: Text("Qty: ${item['quantity'] ?? 1}\nCondition: ${item['condition'] ?? 'N/A'}\nPrice: RM ${price.toStringAsFixed(2)}"),
                       isThreeLine: true,
@@ -469,15 +474,16 @@ class _FurniturePageState extends State<FurniturePage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.indigo, size: 20),
+                            icon: const Icon(Icons.edit_rounded, color: Colors.indigo, size: 20),
                             onPressed: () => _showEditFurnitureDialog(itemId, item),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                            icon: const Icon(Icons.delete_rounded, color: Colors.red, size: 20),
                             onPressed: () => _deleteFurnitureItem(itemId, imageUrl),
                           ),
                         ],
                       ),
+                      onTap: (){},
                     ),
                   );
                 },
@@ -498,7 +504,7 @@ class _FurniturePageState extends State<FurniturePage> {
         onPressed: _showAddFurnitureDialog,
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_rounded),
       ),
     );
   }

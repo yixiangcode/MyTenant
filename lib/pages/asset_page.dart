@@ -165,11 +165,13 @@ class _AssetPageState extends State<AssetPage> {
       final assetDoc = await FirebaseFirestore.instance.collection('assets').doc(assetId).get();
       final oldTenantId = assetDoc.get('tenantId');
 
+      /*
       if (oldTenantId != null && oldTenantId != newTenantId) {
         await FirebaseFirestore.instance.collection('users').doc(oldTenantId).update({
           'landlordId': FieldValue.delete(),
         });
       }
+      */
 
       if (newTenantId != null) {
         await FirebaseFirestore.instance.collection('users').doc(newTenantId).update({
@@ -526,7 +528,7 @@ class _AssetPageState extends State<AssetPage> {
                           ? ClipRRect(borderRadius: BorderRadius.circular(12.0), child: Image.network(imageUrl, width: 60, height: 60, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),))
                           : Image.asset('images/logo.png', height: 40),
 
-                      title: Text(asset['name']),
+                      title: Text(asset['name'], style: TextStyle(fontWeight: FontWeight.bold),),
                       subtitle: Text("${asset['address']}\nRent: RM ${asset['rent']}\n$tenantInfo"),
                       isThreeLine: true,
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tenant/pages/maintenance_page.dart';
 import 'chat_list_page.dart';
 import 'login_page.dart';
 import 'asset_page.dart';
@@ -67,7 +68,7 @@ class LandlordPage extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.account_circle),
+              leading: const Icon(Icons.account_circle_rounded),
               title: const Text('Profile'),
               onTap: () {
                 Navigator.push(
@@ -77,17 +78,17 @@ class LandlordPage extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.info),
+              leading: const Icon(Icons.info_rounded),
               title: const Text('About'),
               onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.help),
+              leading: const Icon(Icons.help_rounded),
               title: const Text('Help'),
               onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.logout),
+              leading: const Icon(Icons.logout_rounded),
               title: const Text('Logout'),
               onTap: () {
                 FirebaseAuth.instance.signOut();
@@ -167,12 +168,12 @@ class LandlordPage extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _buildGridItem(context, Icons.people, "Manage Tenant", () => ManageTenantPage()),
-                  _buildGridItem(context, Icons.home_work, "Manage Property", () => AssetPage()),
-                  _buildGridItem(context, Icons.mark_unread_chat_alt, "Chat Rooms", () => ChatListPage()),
-                  _buildGridItem(context, Icons.attach_money, "Income", () => AssetPage()),
-                  _buildGridItem(context, Icons.notifications, "Notification", () => NotificationPage()),
-                  _buildGridItem(context, Icons.add_chart, "Analysis Report", () => NotificationPage()),
+                  _buildGridItem(context, Icons.people_rounded, "Manage Tenants", () => ManageTenantPage()),
+                  _buildGridItem(context, Icons.home_work_rounded, "Manage Assets", () => AssetPage()),
+                  _buildGridItem(context, Icons.handyman_rounded, "Professionals", () => MaintenancePage()),
+                  _buildGridItem(context, Icons.forum_rounded, "Chat Rooms", () => ChatListPage()),
+                  _buildGridItem(context, Icons.attach_money_rounded, "Income", () => AssetPage()),
+                  _buildGridItem(context, Icons.notifications_rounded, "Notification", () => NotificationPage()),
                 ],
               ),
             ],
