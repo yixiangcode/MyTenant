@@ -72,14 +72,21 @@ class _MaintenancePageState extends State<MaintenancePage> {
   String getRepairKeyword(String label) {
     label = label.toLowerCase();
 
-    if (label.contains("pipe") || label.contains("sink") || label.contains("toilet")) {
+    if (label.contains("sink") || label.contains("flush_toilet") || label.contains("squat_toilet")) {
       return "plumber";
+    } else if (label.contains("cassette_aircond") || label.contains("wall_aircond")) {
+      return "aircond";
+    } else if (label.contains("fluorescent_lamp") || label.contains("led_lamp")) {
+      return "lamp";
+    } else if (label.contains("wall_fan") || label.contains("ceiling_fan")) {
+      return "fan";
+    }else if(label.contains("door_knob")){
+      return "door_lock";
+    } else if (label.contains("distribution_board")) {
+      return "electrician";
+    } else {
+      return label;
     }
-    if (label.contains("socket")) {
-      return "switches";
-    }
-
-    return label;
   }
 
   Future<Position> _getLocation() async {
@@ -156,13 +163,11 @@ class _MaintenancePageState extends State<MaintenancePage> {
       FirebaseModelDownloadType.latestModel,
     );
 
-    // 2. 获取下载模型的路径
     final modelPath = response.file.path;
 
-    // 3. 使用 FirebaseImageLabelerOptions
     final options = LocalLabelerOptions(
       modelPath: modelPath,
-      confidenceThreshold: 0.0,
+      confidenceThreshold: 0.2,
     );
 
 
@@ -173,22 +178,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
     result = labels.isNotEmpty ? labels.first.label : "Unknown";
 
     setState(() {
-      print(result);
-      if (result == 'space heater' || result == 'letter opener' || result == 'modem' || result == 'medicine chest' || result == 'bath towel' || result == 'microwave' || result == 'envelope' || result == 'photocopier' || result == 'carton' || result == 'printer' || result == 'nail'){
-        result = "aircond";
-      } else if (result == 'frying pan' || result == 'electric fan'){
-        result = "fan";
-      } else if (result == 'toilet seat'){
-        result = "toilet";
-      } else if (result == 'washbasin'){
-        result = "sink";
-      } else if (result == 'solar dish' || result == 'abacus' || result == 'shower curtain' || result == 'spotlight' || result == 'lampshade' || result == 'rule' || result == 'bannister' || result == 'prison' || result == 'window shade'){
-        result = "lamp";
-      } else if (result == 'joystick' || result == 'switch'){
-        result = "socket";
-      } else{
-        result = result;
-      }
+      result = result;
     });
 
     await labeler.close();

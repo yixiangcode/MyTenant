@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
 
 class ShopDetailsPage extends StatefulWidget {
   final String placeId;
@@ -52,6 +53,47 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     }
   }
 
+  Future<void> _launchPhone(String? phoneNumber) async {
+    if (phoneNumber == null || phoneNumber.isEmpty || phoneNumber == "Phone not listed") return;
+
+    final formattedNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+    final Uri url = Uri(scheme: 'tel', path: formattedNumber);
+
+    await _launchUrl(url);
+  }
+
+  Future<void> _launchWebsite(String? websiteUrl) async {
+    if (websiteUrl == null || websiteUrl.isEmpty || websiteUrl == "Website not listed") return;
+
+    String finalUrl = websiteUrl.startsWith('http') ? websiteUrl : 'https://$websiteUrl';
+
+    final Uri url = Uri.parse(finalUrl);
+
+    await _launchUrl(url);
+  }
+
+  Future<void> _launchMap(String? address) async {
+    if (address == null || address.isEmpty || address == "N/A") return;
+
+    final Uri url = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}');
+
+    await _launchUrl(url);
+  }
+
+  Future<void> _launchUrl(Uri url) async {
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      print('Could not launch $url');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('无法打开: ${url.toString()}')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,38 +114,88 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
   }
 
   Widget _buildDetailsContent(Map<String, dynamic> details) {
+    final String? address = details["formatted_address"];
+    final String? phoneNumber = details["international_phone_number"];
+    final String? website = details["website"];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(details["name"] ?? "N/A", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text("Address: ${details["formatted_address"] ?? "N/A"}"),
-
-          if (details.containsKey("rating"))
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text("Rating: ⭐ ${details["rating"]} (${details["user_ratings_total"]} reviews)", style: const TextStyle(fontSize: 16)),
+          Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    details["name"] ?? "N/A",
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.indigo),
+                  ),
+                  const SizedBox(height: 8),
+                  if (details.containsKey("rating"))
+                    Text(
+                      "Rating: ⭐ ${details["rating"]} (${details["user_ratings_total"]} reviews)",
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                ],
+              ),
             ),
+          ),
 
-          const Divider(),
-          _buildDetailRow(Icons.phone, details["international_phone_number"] ?? "Phone not listed"),
-          _buildDetailRow(Icons.language, details["website"] ?? "Website not listed"),
+          Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            elevation: 4,
+            child: Column(
+              children: [
+                _buildDetailRow(
+                  Icons.location_on,
+                  address ?? "Address not listed",
+                  address != null ? () => _launchMap(address) : null,
+                ),
+                _buildDetailRow(
+                  Icons.phone,
+                  phoneNumber ?? "Phone not listed",
+                  phoneNumber != null ? () => _launchPhone(phoneNumber) : null,
+                ),
+                _buildDetailRow(
+                  Icons.language,
+                  website ?? "Website not listed",
+                  website != null ? () => _launchWebsite(website) : null,
+                ),
+              ],
+            ),
+          ),
 
-          const Divider(),
-          _buildOpeningHours(details["opening_hours"]),
-
-          // Add button or map
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildOpeningHours(details["opening_hours"]),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String text) {
+  Widget _buildDetailRow(IconData icon, String? text, VoidCallback? onTap) {
+    bool isAvailable = text != null && text.isNotEmpty && text != "Phone not listed" && text != "Website not listed" && text != "Address not listed";
+
+    final finalOnTap = isAvailable ? onTap : null;
+
+    String displayText = text ?? "N/A";
+
     return ListTile(
       leading: Icon(icon, color: Colors.indigo),
-      title: Text(text),
+      title: Text(displayText, style: TextStyle(
+        decoration: TextDecoration.none,
+        color: isAvailable ? Colors.blue.shade800 : Colors.black87,
+      )),
+      onTap: finalOnTap,
     );
   }
 
@@ -117,10 +209,11 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Opening Hours:", style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text("🕒 Opening Hours:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.indigo)),
+        const Divider(),
         ...hours.map((hour) => Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: Text(hour),
+          padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+          child: Text(hour, style: const TextStyle(fontSize: 16)),
         )).toList(),
       ],
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tenant/pages/ai_chat_page.dart';
+import 'package:tenant/pages/owing_page.dart';
 import 'notification_page.dart';
 import 'scanner_page.dart';
 import 'maintenance_page.dart';
@@ -83,7 +85,12 @@ class TenantPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.help_rounded),
               title: const Text('Help'),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => AIChatPage()),
+                );
+                },
             ),
             ListTile(
               leading: const Icon(Icons.logout_rounded),
@@ -103,6 +110,21 @@ class TenantPage extends StatelessWidget {
           ],
         ),
       ),
+
+      floatingActionButton: FloatingActionButton(
+        shape: const CircleBorder(),
+        onPressed: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AIChatPage()),
+          );
+        },
+        backgroundColor: Colors.indigoAccent,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.support_agent_rounded, size: 45,),
+      ),
+
+
       backgroundColor: Colors.purple[50],
       body: SingleChildScrollView(
         child: Padding(
@@ -173,7 +195,7 @@ class TenantPage extends StatelessWidget {
                   _buildGridItem(context, Icons.description_rounded, "View Document", () => DocumentPage()),
                   _buildGridItem(context, Icons.handyman_rounded, "Maintenance", () => MaintenancePage()),
                   _buildGridItem(context, Icons.forum_rounded, "Chat", () => ChatPage(receiverId: landlordId, receiverName: 'Chat with Landlord',)),
-                  _buildGridItem(context, Icons.local_atm_rounded, "Owing Records", () => NotificationPage()),
+                  _buildGridItem(context, Icons.local_atm_rounded, "Owing Records", () => OwingPage()),
                   _buildGridItem(context, Icons.notifications_rounded, "Notification", () => NotificationPage()),
                 ],
               ),

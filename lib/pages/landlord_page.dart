@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tenant/pages/ai_chat_page.dart';
+import 'package:tenant/pages/income_page.dart';
 import 'package:tenant/pages/maintenance_page.dart';
 import 'chat_list_page.dart';
 import 'login_page.dart';
@@ -85,7 +87,12 @@ class LandlordPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.help_rounded),
               title: const Text('Help'),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AIChatPage()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.logout_rounded),
@@ -172,7 +179,7 @@ class LandlordPage extends StatelessWidget {
                   _buildGridItem(context, Icons.home_work_rounded, "Manage Assets", () => AssetPage()),
                   _buildGridItem(context, Icons.handyman_rounded, "Professionals", () => MaintenancePage()),
                   _buildGridItem(context, Icons.forum_rounded, "Chat Rooms", () => ChatListPage()),
-                  _buildGridItem(context, Icons.attach_money_rounded, "Income", () => AssetPage()),
+                  _buildGridItem(context, Icons.attach_money_rounded, "Income", () => IncomePage()),
                   _buildGridItem(context, Icons.notifications_rounded, "Notification", () => NotificationPage()),
                 ],
               ),
