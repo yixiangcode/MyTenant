@@ -84,7 +84,21 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
     emailCtrl.clear();
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Invitation sent to $tenantEmail. Waiting for approval!')),
+      SnackBar(
+        content: Text(
+          'Invitation sent to $tenantEmail. Waiting for approval!',
+          style: TextStyle(color: Colors.white, fontSize: 12),
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        margin: const EdgeInsets.all(25),
+        elevation: 8.0,
+      ),
     );
   }
 
@@ -226,7 +240,21 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
                             .update({'landlordId': FieldValue.delete()});
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${tenant['name']} removed successfully!')),
+                          SnackBar(
+                            content: Text(
+                              '${tenant['name']} removed successfully!',
+                              style: TextStyle(color: Colors.white, fontSize: 12),
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 2),
+
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            margin: const EdgeInsets.all(25),
+                            elevation: 8.0,
+                          ),
                         );
                       },
                     ),

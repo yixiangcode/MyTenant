@@ -116,7 +116,21 @@ class LoginPageState extends State<LoginPage> {
                         );
                       }
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Login Successful")),
+                        SnackBar(
+                          content: const Text(
+                            "Login Successfully.",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
+
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          margin: const EdgeInsets.all(25),
+                          elevation: 8.0,
+                        ),
                       );
                     }
                   } catch (e){

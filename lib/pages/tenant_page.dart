@@ -98,8 +98,23 @@ class TenantPage extends StatelessWidget {
               onTap: () {
                 FirebaseAuth.instance.signOut();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Logout Successful")),
+                  SnackBar(
+                    content: const Text(
+                      "Logout Successfully.",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    margin: const EdgeInsets.all(25),
+                    elevation: 8.0,
+                  ),
                 );
+
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -111,6 +126,7 @@ class TenantPage extends StatelessWidget {
         ),
       ),
 
+      /*
       floatingActionButton: FloatingActionButton(
         shape: const CircleBorder(),
         onPressed: (){
@@ -123,7 +139,7 @@ class TenantPage extends StatelessWidget {
         foregroundColor: Colors.white,
         child: const Icon(Icons.support_agent_rounded, size: 45,),
       ),
-
+      */
 
       backgroundColor: Colors.purple[50],
       body: SingleChildScrollView(

@@ -302,7 +302,21 @@ class _ScannerPageState extends State<ScannerPage> {
                     String billImageUrl = await storageRef.getDownloadURL();
                     if (_selectedMonth == null || _selectedYear == null || _selectedBillType == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please select Bill Type, Month, and Year.')),
+                        SnackBar(
+                          content: const Text(
+                            'Please select Bill Type, Month, and Year.',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
+
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          margin: const EdgeInsets.all(25),
+                          elevation: 8.0,
+                        ),
                       );
                       setDialogState(() { _isLoading = false; });
                       return;
@@ -316,7 +330,23 @@ class _ScannerPageState extends State<ScannerPage> {
                       amountValue = num.parse(finalAmountString);
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Invalid amount format: $finalAmountString')),
+                        SnackBar(
+                          content: Center(
+                            child: Text(
+                              'Invalid amount format: $finalAmountString',
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
+
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          margin: const EdgeInsets.all(25),
+                          elevation: 8.0,
+                        ),
                       );
                       setDialogState(() { _isLoading = false; });
                       return;
@@ -370,8 +400,20 @@ class _ScannerPageState extends State<ScannerPage> {
                   }
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Data saved successfully!'),
+                    SnackBar(
+                      content: const Text(
+                        "'Data saved successfully!'",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 2),
+
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      margin: const EdgeInsets.all(25),
+                      elevation: 8.0,
                     ),
                   );
 
@@ -415,13 +457,47 @@ class _ScannerPageState extends State<ScannerPage> {
               setState(() {
                 if (source == "Camera") {
                   source = "Gallery";
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text(
+                        "Select image from gallery now.",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      backgroundColor: Colors.indigoAccent,
+                      duration: const Duration(seconds: 2),
+
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      margin: const EdgeInsets.all(25),
+                      elevation: 8.0,
+                    ),
+                  );
                 } else {
                   source = "Camera";
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text(
+                        "Scan image from camera now.",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      backgroundColor: Colors.indigoAccent,
+                      duration: const Duration(seconds: 2),
+
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      margin: const EdgeInsets.all(25),
+                      elevation: 8.0,
+                    ),
+                  );
                 }
               });
             },
             icon: Icon(
-              source == "Gallery" ? Icons.photo_library : Icons.camera_alt,
+              source == "Gallery" ? Icons.photo_library_rounded : Icons.cameraswitch_rounded,
             ),
           )
         ],

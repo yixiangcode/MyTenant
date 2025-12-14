@@ -169,7 +169,21 @@ class RegisterPageState extends State<RegisterPage> {
                       }
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Register Successful")),
+                        SnackBar(
+                          content: const Text(
+                            "Register Successfully.",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
+
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          margin: const EdgeInsets.all(25),
+                          elevation: 8.0,
+                        ),
                       );
 
                       Navigator.pop(context);

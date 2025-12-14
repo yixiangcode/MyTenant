@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tenant/pages/ai_chat_page.dart';
 import 'package:tenant/pages/income_page.dart';
+import 'package:tenant/pages/landlord_maintenance_page.dart';
 import 'package:tenant/pages/maintenance_page.dart';
 import 'chat_list_page.dart';
 import 'login_page.dart';
@@ -180,7 +181,7 @@ class LandlordPage extends StatelessWidget {
                   _buildGridItem(context, Icons.handyman_rounded, "Professionals", () => MaintenancePage()),
                   _buildGridItem(context, Icons.forum_rounded, "Chat Rooms", () => ChatListPage()),
                   _buildGridItem(context, Icons.attach_money_rounded, "Income", () => IncomePage()),
-                  _buildGridItem(context, Icons.notifications_rounded, "Notification", () => NotificationPage()),
+                  _buildGridItem(context, Icons.build_circle_rounded, "Maintenance", () => LandlordMaintenancePage()),
                 ],
               ),
             ],

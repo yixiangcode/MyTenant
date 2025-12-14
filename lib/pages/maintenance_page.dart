@@ -232,7 +232,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                         controller: searchCtrl,
                         decoration: InputDecoration(
                           hintText: "Search professionals...",
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon: const Icon(Icons.search_rounded),
                           filled: true,
                           fillColor: Colors.white,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -250,7 +250,21 @@ class _MaintenancePageState extends State<MaintenancePage> {
                           try {
                             if(searchCtrl.text.trim().isEmpty){
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Please search the keyword first.")),
+                                SnackBar(
+                                  content: const Text(
+                                    "Please search the keyword first.",
+                                    style: TextStyle(color: Colors.white, fontSize: 16),
+                                  ),
+                                  backgroundColor: Colors.indigoAccent,
+                                  duration: const Duration(seconds: 2),
+
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  margin: const EdgeInsets.all(25),
+                                  elevation: 8.0,
+                                ),
                               );
                             }else{
                               setState(() {
@@ -304,7 +318,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                           source = "Gallery";
                           detectObject();
                         },
-                        icon: const Icon(Icons.add_photo_alternate_rounded, color: Colors.indigo,size: 30.0,),
+                        icon: const Icon(Icons.photo_library_rounded, color: Colors.indigo,size: 30.0,),
                         label: const Text('Gallery',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -325,7 +339,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                           detectObject();
                         },
                         icon: const Icon(Icons.view_in_ar_rounded, color: Colors.indigo,size: 30.0,),
-                        label: const Text('Scan',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+                        label: const Text('Scanner',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -344,7 +358,31 @@ class _MaintenancePageState extends State<MaintenancePage> {
                   onPressed: _isLoading ? null : () async {
                     if(result == ''){
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please scan your asset first.")),
+                        SnackBar(
+                          content: const Text(
+                            "Please scan an asset first.",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          backgroundColor: Colors.indigoAccent,
+                          duration: const Duration(seconds: 2),
+
+                          action: SnackBarAction(
+                            label: 'Scan',
+                            textColor: Colors.indigo,
+                            backgroundColor: Colors.white,
+                            onPressed: () {
+                              source = "Camera";
+                              detectObject();
+                            },
+                          ),
+
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          margin: const EdgeInsets.all(25),
+                          elevation: 8.0,
+                        ),
                       );
                       return;
                     }
@@ -503,9 +541,26 @@ class FurnitureMaintenanceList extends StatelessWidget {
                   subtitle: Text("Condition: $condition\nPrice: RM ${price.toStringAsFixed(2)}"),
                   trailing: IconButton(
                     icon: const Icon(Icons.build_circle, size: 35, color: Colors.red),
-                    onPressed: () {
+                    onPressed: () async {
+                      await FirebaseFirestore.instance
+                          .collection('maintenance_requests')
+                          .add({
+                        'assetId': assetId,
+                        'assetName': 'IEB 407',
+                        'furnitureName': itemName,
+                        'issueType': 'furniture',
+                        'imageUrl': imageUrl,
+                        'tenantId': FirebaseAuth.instance.currentUser!.uid,
+                        'landlordId': item['landlordId'],
+                        'status': 'pending',
+                        'createdAt': FieldValue.serverTimestamp(),
+                      });
+
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Report maintenance for: $itemName')),
+                        const SnackBar(
+                          content: Text('Maintenance reported'),
+                          backgroundColor: Colors.green,
+                        ),
                       );
                     },
                   ),

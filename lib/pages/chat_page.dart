@@ -29,10 +29,16 @@ class _ChatPageState extends State<ChatPage> {
     return ids.join('_');
   }
 
-  Future<void> sendMessage() async {
+  @override
+  void initState() {
+    super.initState();
+    _markMessagesAsRead(widget.receiverId);
+  }
+
+  Future<void> sendMessage(String receiverId) async {
     if (_messageController.text.trim().isEmpty) return;
 
-    if (widget.receiverId.isEmpty) {
+    if (receiverId.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error: Please accept landlord invitation first.')),
@@ -44,12 +50,13 @@ class _ChatPageState extends State<ChatPage> {
     final String messageText = _messageController.text.trim();
     _messageController.clear();
 
-    final String chatRoomId = getChatRoomId(currentUserId, widget.receiverId);
+    final String chatRoomId = getChatRoomId(currentUserId, receiverId);
 
     Map<String, dynamic> messageData = {
       'senderId': currentUserId,
       'message': messageText,
       'timestamp': FieldValue.serverTimestamp(),
+      'read': false,
     };
 
     await _firestore
@@ -58,15 +65,52 @@ class _ChatPageState extends State<ChatPage> {
         .collection('messages')
         .add(messageData);
 
+    final receiverUnreadCountField = '${receiverId}_unreadCount';
+
     await _firestore.collection('chats').doc(chatRoomId).set({
-      'participants': [currentUserId, widget.receiverId],
+      'participants': [currentUserId, receiverId],
       'lastMessage': messageText,
       'lastMessageTime': FieldValue.serverTimestamp(),
+      receiverUnreadCountField: FieldValue.increment(1),
     }, SetOptions(merge: true));
   }
 
-  Widget _buildMessageList() {
-    final String chatRoomId = getChatRoomId(currentUserId, widget.receiverId);
+  Future<void> _markMessagesAsRead(String receiverId) async {
+    if (receiverId.isEmpty) return;
+
+    final String chatRoomId = getChatRoomId(currentUserId, receiverId);
+
+    try {
+      final unreadMessages = await _firestore
+          .collection('chats')
+          .doc(chatRoomId)
+          .collection('messages')
+          .where('senderId', isEqualTo: receiverId)
+          .where('read', isEqualTo: false)
+          .get();
+
+      if (unreadMessages.docs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (var doc in unreadMessages.docs) {
+          batch.update(doc.reference, {'read': true, 'readAt': FieldValue.serverTimestamp()});
+        }
+        await batch.commit();
+      }
+
+      await _firestore.collection('chats').doc(chatRoomId).update({
+        '${currentUserId}_unreadCount': 0,
+      });
+
+    } catch (e) {
+      if (mounted) {
+        print('Error marking messages as read: $e');
+      }
+    }
+  }
+
+
+  Widget _buildMessageList(String receiverId) {
+    final String chatRoomId = getChatRoomId(currentUserId, receiverId);
 
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
@@ -100,25 +144,38 @@ class _ChatPageState extends State<ChatPage> {
     var alignment = isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
     var color = isCurrentUser ? Colors.indigoAccent : Colors.white;
     var textColor = isCurrentUser ? Colors.white : Colors.black;
+    final bool isRead = data.containsKey('read') && data['read'] == true;
 
     return Container(
       alignment: alignment,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Text(
-          data['message'],
-          style: TextStyle(color: textColor, fontSize: 16),
-        ),
+      child: Column(
+        crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Text(
+              data['message'],
+              style: TextStyle(color: textColor, fontSize: 16),
+            ),
+          ),
+          if (isCurrentUser && isRead)
+            const Padding(
+              padding: EdgeInsets.only(top: 2.0, right: 4.0),
+              child: Icon(Icons.done_all, size: 12, color: Colors.grey),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildMessageInput() {
+  Widget _buildMessageInput(String receiverId) {
+    final bool canSend = receiverId.isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Row(
@@ -126,30 +183,30 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: TextField(
               controller: _messageController,
+              enabled: canSend,
               decoration: InputDecoration(
-                hintText: 'Type a message...',
+                hintText: canSend ? 'Type a message...' : 'Please wait / Invitation pending...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25.0),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: canSend ? Colors.white : Colors.grey[200],
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20),
               ),
               keyboardType: TextInputType.multiline,
               maxLines: null,
-              //onSubmitted: (value) => sendMessage(), // Press enter to send
             ),
           ),
           const SizedBox(width: 8),
           Container(
             decoration: BoxDecoration(
-              color: Colors.indigoAccent,
+              color: canSend ? Colors.indigoAccent : Colors.grey,
               shape: BoxShape.circle,
             ),
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: sendMessage,
+              onPressed: canSend ? () => sendMessage(receiverId) : null,
             ),
           ),
           const SizedBox(height: 75.0),
@@ -160,24 +217,44 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.receiverName, style: const TextStyle(color: Colors.white)),
-        centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _firestore.collection('users').doc(currentUserId).snapshots(),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
 
-      backgroundColor: Colors.purple[50],
+        final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
 
-      body: Column(
-        children: [
-          Expanded(
-            child: _buildMessageList(),
+        final String fetchedLandlordId = userData?['landlordId'] as String? ?? '';
+
+        final String currentReceiverId = fetchedLandlordId.isNotEmpty ? fetchedLandlordId : widget.receiverId;
+
+        final bool canChat = currentReceiverId.isNotEmpty;
+
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.receiverName, style: const TextStyle(color: Colors.white)),
+            centerTitle: true,
+            backgroundColor: Colors.indigo,
+            foregroundColor: Colors.white,
           ),
-          _buildMessageInput(),
-        ],
-      ),
+
+          backgroundColor: Colors.purple[50],
+
+          body: Column(
+            children: [
+              Expanded(
+                child: canChat
+                    ? _buildMessageList(currentReceiverId)
+                    : const Center(child: Text('Please accept the invitation to start chatting.')),
+              ),
+              _buildMessageInput(canChat ? currentReceiverId : ''),
+            ],
+          ),
+        );
+      },
     );
   }
 }

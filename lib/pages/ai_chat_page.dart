@@ -201,7 +201,7 @@ class _AIChatPageState extends State<AIChatPage> {
                       icon: const Icon(Icons.link, size: 18),
                       label: Text(message.action!.label),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo,
+                        backgroundColor: Colors.indigoAccent,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
