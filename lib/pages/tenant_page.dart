@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tenant/pages/about_page.dart';
 import 'package:tenant/pages/ai_chat_page.dart';
 import 'package:tenant/pages/owing_page.dart';
 import 'notification_page.dart';
@@ -80,17 +81,22 @@ class TenantPage extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.info_rounded),
               title: const Text('About'),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AboutPage()),
+                );
+              },
             ),
             ListTile(
               leading: const Icon(Icons.help_rounded),
               title: const Text('Help'),
               onTap: () {
                 Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => AIChatPage()),
+                  context,
+                  MaterialPageRoute(builder: (_) => AIChatPage()),
                 );
-                },
+              },
             ),
             ListTile(
               leading: const Icon(Icons.logout_rounded),
@@ -142,6 +148,7 @@ class TenantPage extends StatelessWidget {
       */
 
       backgroundColor: Colors.purple[50],
+
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

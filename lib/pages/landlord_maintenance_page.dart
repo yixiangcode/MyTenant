@@ -18,60 +18,69 @@ class LandlordMaintenancePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Maintenance Requests"),
+        centerTitle: true,
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('maintenance_requests')
-            .where('landlordId', isEqualTo: landlordId)
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      backgroundColor: Colors.purple[50],
 
-          final docs = snapshot.data!.docs;
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('maintenance_requests')
+              .where('landlordId', isEqualTo: landlordId)
+              .orderBy('createdAt', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(child: Text("Error: ${snapshot.error}"));
+            }
 
-          if (docs.isEmpty) {
-            return const Center(child: Text("No maintenance requests"));
-          }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          return ListView.builder(
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
+            final docs = snapshot.data!.docs;
 
-              return Card(
-                margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  leading: data['imageUrl'] != null
-                      ? Image.network(
-                    data['imageUrl'],
-                    width: 50,
-                    fit: BoxFit.cover,
-                  )
-                      : const Icon(Icons.build),
-                  title: Text(data['furnitureName'] ?? ''),
-                  subtitle: Text(
-                    "${data['assetName']}\n${data['description']}",
+            if (docs.isEmpty) {
+              return const Center(child: Text("No maintenance requests"));
+            }
+
+            return ListView.builder(
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                final data = docs[index].data() as Map<String, dynamic>;
+
+                return Card(
+                  elevation: 6.0,
+                  margin: const EdgeInsets.symmetric(vertical: 6.0 , horizontal: 15.0),
+                  child: ListTile(
+                    leading: data['imageUrl'] != null
+                        ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12.0),
+                      child: Image.network(
+                        data['imageUrl'],
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                        : const Icon(Icons.build),
+                    title: Text(data['furnitureName'] ?? '', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                      "Property: ${data['assetName']}\nStatus: ${data['status']}",
+                    ),
+                    trailing: data['status'] == 'pending'
+                        ? Icon(Icons.pending_actions_rounded, size: 30.0, color: Colors.orange,)
+                        : Icon(Icons.check_circle_rounded, size: 30.0, color: Colors.green,),
                   ),
-                  trailing: Chip(
-                    label: Text(data['status']),
-                    backgroundColor: data['status'] == 'pending'
-                        ? Colors.orange
-                        : Colors.green,
-                  ),
-                ),
-              );
-            },
-          );
-        },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

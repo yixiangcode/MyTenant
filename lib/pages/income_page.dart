@@ -3,7 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class IncomePage extends StatelessWidget {
-  const IncomePage({super.key});
+  IncomePage({super.key});
+
+  final Map<String, IconData> typeIcons = {
+    'Water': Icons.water_drop_rounded,
+    'Electric': Icons.bolt_rounded,
+    'Electricity': Icons.bolt_rounded,
+    'Internet': Icons.router_rounded,
+    'Maintenance': Icons.build_circle_rounded,
+    'Rent': Icons.home_rounded,
+    'Rental': Icons.home_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +26,9 @@ class IncomePage extends StatelessWidget {
         foregroundColor: Colors.white,
         backgroundColor: Colors.indigo,
       ),
+
+      backgroundColor: Colors.purple[50],
+
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('assets')
@@ -76,6 +89,16 @@ class IncomePage extends StatelessWidget {
                             final billAmount = data['amount'] as num? ?? 0;
 
                             return ListTile(
+                              leading: data['type'] != null && typeIcons.containsKey(data['type'])
+                                  ? Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(typeIcons[data['type']], color: Colors.indigo),
+                              )
+                                  : null,
                               title: Text('${data['type']}'),
                               subtitle: Text('${data['month']} ${data['year']}'),
                               trailing: Text('RM ${billAmount.toStringAsFixed(2)}'),

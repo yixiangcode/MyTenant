@@ -55,7 +55,7 @@ class _AIChatPageState extends State<AIChatPage> {
   ChatMessage _getMockAIResponse(String userText) {
     userText = userText.toLowerCase();
 
-    if (userText.contains('fix') || userText.contains('broken') || userText.contains('problem')) {
+    if (userText.contains('fix') || userText.contains('broke') || userText.contains('problem') || userText.contains('damage')) {
       final action = MessageAction(
         label: "Request Maintenance",
         pageBuilder: (context) => const MaintenancePage(),

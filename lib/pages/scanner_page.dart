@@ -460,17 +460,17 @@ class _ScannerPageState extends State<ScannerPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: const Text(
-                        "Select image from gallery now.",
+                        "Switched to Gallery mode.",
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
-                      backgroundColor: Colors.indigoAccent,
+                      backgroundColor: Colors.green,
                       duration: const Duration(seconds: 2),
 
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      margin: const EdgeInsets.all(25),
+                      margin: const EdgeInsets.all(15),
                       elevation: 8.0,
                     ),
                   );
@@ -479,17 +479,17 @@ class _ScannerPageState extends State<ScannerPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: const Text(
-                        "Scan image from camera now.",
+                        "Switched to Camera mode.",
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
-                      backgroundColor: Colors.indigoAccent,
+                      backgroundColor: Colors.green,
                       duration: const Duration(seconds: 2),
 
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      margin: const EdgeInsets.all(25),
+                      margin: const EdgeInsets.all(15),
                       elevation: 8.0,
                     ),
                   );

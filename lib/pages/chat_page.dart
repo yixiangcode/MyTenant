@@ -29,34 +29,18 @@ class _ChatPageState extends State<ChatPage> {
     return ids.join('_');
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _markMessagesAsRead(widget.receiverId);
-  }
-
-  Future<void> sendMessage(String receiverId) async {
+  Future<void> sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
-
-    if (receiverId.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error: Please accept landlord invitation first.')),
-        );
-      }
-      return;
-    }
 
     final String messageText = _messageController.text.trim();
     _messageController.clear();
 
-    final String chatRoomId = getChatRoomId(currentUserId, receiverId);
+    final String chatRoomId = getChatRoomId(currentUserId, widget.receiverId);
 
     Map<String, dynamic> messageData = {
       'senderId': currentUserId,
       'message': messageText,
       'timestamp': FieldValue.serverTimestamp(),
-      'read': false,
     };
 
     await _firestore
@@ -65,52 +49,15 @@ class _ChatPageState extends State<ChatPage> {
         .collection('messages')
         .add(messageData);
 
-    final receiverUnreadCountField = '${receiverId}_unreadCount';
-
     await _firestore.collection('chats').doc(chatRoomId).set({
-      'participants': [currentUserId, receiverId],
+      'participants': [currentUserId, widget.receiverId],
       'lastMessage': messageText,
       'lastMessageTime': FieldValue.serverTimestamp(),
-      receiverUnreadCountField: FieldValue.increment(1),
     }, SetOptions(merge: true));
   }
 
-  Future<void> _markMessagesAsRead(String receiverId) async {
-    if (receiverId.isEmpty) return;
-
-    final String chatRoomId = getChatRoomId(currentUserId, receiverId);
-
-    try {
-      final unreadMessages = await _firestore
-          .collection('chats')
-          .doc(chatRoomId)
-          .collection('messages')
-          .where('senderId', isEqualTo: receiverId)
-          .where('read', isEqualTo: false)
-          .get();
-
-      if (unreadMessages.docs.isNotEmpty) {
-        final batch = _firestore.batch();
-        for (var doc in unreadMessages.docs) {
-          batch.update(doc.reference, {'read': true, 'readAt': FieldValue.serverTimestamp()});
-        }
-        await batch.commit();
-      }
-
-      await _firestore.collection('chats').doc(chatRoomId).update({
-        '${currentUserId}_unreadCount': 0,
-      });
-
-    } catch (e) {
-      if (mounted) {
-        print('Error marking messages as read: $e');
-      }
-    }
-  }
-
-
-  Widget _buildMessageList(String receiverId) {
-    final String chatRoomId = getChatRoomId(currentUserId, receiverId);
+  Widget _buildMessageList() {
+    final String chatRoomId = getChatRoomId(currentUserId, widget.receiverId);
 
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
@@ -120,9 +67,7 @@ class _ChatPageState extends State<ChatPage> {
           .orderBy('timestamp', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
+        if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -138,44 +83,26 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
     bool isCurrentUser = data['senderId'] == currentUserId;
 
-    var alignment = isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
-    var color = isCurrentUser ? Colors.indigoAccent : Colors.white;
-    var textColor = isCurrentUser ? Colors.white : Colors.black;
-    final bool isRead = data.containsKey('read') && data['read'] == true;
-
     return Container(
-      alignment: alignment,
+      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: Column(
-        crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Text(
-              data['message'],
-              style: TextStyle(color: textColor, fontSize: 16),
-            ),
-          ),
-          if (isCurrentUser && isRead)
-            const Padding(
-              padding: EdgeInsets.only(top: 2.0, right: 4.0),
-              child: Icon(Icons.done_all, size: 12, color: Colors.grey),
-            ),
-        ],
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isCurrentUser ? Colors.indigoAccent : Colors.white,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Text(
+          data['message'] ?? '',
+          style: TextStyle(color: isCurrentUser ? Colors.white : Colors.black, fontSize: 16),
+        ),
       ),
     );
   }
 
-  Widget _buildMessageInput(String receiverId) {
-    final bool canSend = receiverId.isNotEmpty;
-
+  Widget _buildMessageInput() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Row(
@@ -183,15 +110,14 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: TextField(
               controller: _messageController,
-              enabled: canSend,
               decoration: InputDecoration(
-                hintText: canSend ? 'Type a message...' : 'Please wait / Invitation pending...',
+                hintText: 'Type a message...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25.0),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: canSend ? Colors.white : Colors.grey[200],
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20),
               ),
               keyboardType: TextInputType.multiline,
@@ -200,16 +126,12 @@ class _ChatPageState extends State<ChatPage> {
           ),
           const SizedBox(width: 8),
           Container(
-            decoration: BoxDecoration(
-              color: canSend ? Colors.indigoAccent : Colors.grey,
-              shape: BoxShape.circle,
-            ),
+            decoration: const BoxDecoration(color: Colors.indigoAccent, shape: BoxShape.circle),
             child: IconButton(
               icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: canSend ? () => sendMessage(receiverId) : null,
+              onPressed: sendMessage,
             ),
           ),
-          const SizedBox(height: 75.0),
         ],
       ),
     );
@@ -217,44 +139,56 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot>(
-      stream: _firestore.collection('users').doc(currentUserId).snapshots(),
-      builder: (context, userSnapshot) {
-        if (userSnapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.receiverName, style: const TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+      ),
+      backgroundColor: Colors.purple[50],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _firestore
+            .collection('assets')
+            .where('landlordId', isEqualTo: currentUserId)
+            .where('tenantId', isEqualTo: widget.receiverId)
+            .snapshots(),
+        builder: (context, snapshot) {
+          bool isConnected = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
 
-        final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
+          // tenant view
+          return StreamBuilder<QuerySnapshot>(
+            stream: _firestore
+                .collection('assets')
+                .where('tenantId', isEqualTo: currentUserId)
+                .where('landlordId', isEqualTo: widget.receiverId)
+                .snapshots(),
+            builder: (context, tenantSnapshot) {
+              bool isConnectedAsTenant = tenantSnapshot.hasData && tenantSnapshot.data!.docs.isNotEmpty;
+              bool canChat = isConnected || isConnectedAsTenant;
 
-        final String fetchedLandlordId = userData?['landlordId'] as String? ?? '';
-
-        final String currentReceiverId = fetchedLandlordId.isNotEmpty ? fetchedLandlordId : widget.receiverId;
-
-        final bool canChat = currentReceiverId.isNotEmpty;
-
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(widget.receiverName, style: const TextStyle(color: Colors.white)),
-            centerTitle: true,
-            backgroundColor: Colors.indigo,
-            foregroundColor: Colors.white,
-          ),
-
-          backgroundColor: Colors.purple[50],
-
-          body: Column(
-            children: [
-              Expanded(
-                child: canChat
-                    ? _buildMessageList(currentReceiverId)
-                    : const Center(child: Text('Please accept the invitation to start chatting.')),
-              ),
-              _buildMessageInput(canChat ? currentReceiverId : ''),
-            ],
-          ),
-        );
-      },
+              return Column(
+                children: [
+                  Expanded(child: _buildMessageList()),
+                  canChat
+                      ? _buildMessageInput()
+                      : Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    //color: Colors.red[100],
+                    child: const Text(
+                      'Access Denied: You are no longer connected.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

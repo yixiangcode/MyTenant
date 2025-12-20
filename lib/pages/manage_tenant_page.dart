@@ -188,82 +188,85 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
 
       backgroundColor: Colors.purple[50],
 
-      body: StreamBuilder<QuerySnapshot>(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: StreamBuilder<QuerySnapshot>(
 
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .where('landlordId', isEqualTo: landlordId)
-            .where('role', isEqualTo: 'Tenant')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .where('landlordId', isEqualTo: landlordId)
+              .where('role', isEqualTo: 'Tenant')
+              .orderBy('createdAt', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
+            if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
 
-          final tenants = snapshot.data!.docs;
-          if (tenants.isEmpty) return const Center(child: Text("No tenants found."));
+            final tenants = snapshot.data!.docs;
+            if (tenants.isEmpty) return const Center(child: Text("No tenants found."));
 
-          return ListView.builder(
-            itemCount: tenants.length,
-            itemBuilder: (context, index) {
-              final tenant = tenants[index].data() as Map<String, dynamic>;
+            return ListView.builder(
+              itemCount: tenants.length,
+              itemBuilder: (context, index) {
+                final tenant = tenants[index].data() as Map<String, dynamic>;
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                elevation: 3.0,
-                child: ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                    ),
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  elevation: 3.0,
+                  child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
 
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(30.0),
-                      child: tenant['avatarUrl'] != null && tenant['avatarUrl'].isNotEmpty
-                          ? Image.network(tenant['avatarUrl'], width: 40.0, height: 40.0, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40))
-                          : const Icon(Icons.person, size: 40, color: Colors.grey),
-                    ),
-                    title: Text(tenant['name'] ?? 'Name N/A', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                      "Email: ${tenant['email']}\nContact: ${tenant['contactNumber'] ?? 'N/A'}\nAddress: ${tenant['address'] ?? 'N/A'}",
-                    ),
-                    isThreeLine: true,
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(30.0),
+                        child: tenant['avatarUrl'] != null && tenant['avatarUrl'].isNotEmpty
+                            ? Image.network(tenant['avatarUrl'], width: 40.0, height: 40.0, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40))
+                            : const Icon(Icons.person, size: 40, color: Colors.grey),
+                      ),
+                      title: Text(tenant['name'] ?? 'Name N/A', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(
+                        "Email: ${tenant['email']}\nContact: ${tenant['contactNumber'] ?? 'N/A'}\nAddress: ${tenant['address'] ?? 'N/A'}",
+                      ),
+                      isThreeLine: true,
 
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        await FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(tenants[index].id)
-                            .update({'landlordId': FieldValue.delete()});
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(tenants[index].id)
+                              .update({'landlordId': FieldValue.delete()});
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${tenant['name']} removed successfully!',
-                              style: TextStyle(color: Colors.white, fontSize: 12),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${tenant['name']} removed successfully!',
+                                style: TextStyle(color: Colors.white, fontSize: 12),
+                              ),
+                              backgroundColor: Colors.green,
+                              duration: const Duration(seconds: 2),
+
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              margin: const EdgeInsets.all(25),
+                              elevation: 8.0,
                             ),
-                            backgroundColor: Colors.green,
-                            duration: const Duration(seconds: 2),
-
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            margin: const EdgeInsets.all(25),
-                            elevation: 8.0,
-                          ),
-                        );
-                      },
-                    ),
-                    onTap: (){},
-                ),
-              );
-            },
-          );
-        },
+                          );
+                        },
+                      ),
+                      onTap: (){},
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

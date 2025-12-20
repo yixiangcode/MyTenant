@@ -76,11 +76,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(30.0),
+                        image: _selectedImage == null && userData['avatarUrl'] != null
+                            ? DecorationImage(image: NetworkImage(userData['avatarUrl']), fit: BoxFit.cover)
+                            : null,
                       ),
                       alignment: Alignment.center,
                       child: _selectedImage != null
                           ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                          : const Icon(Icons.add_photo_alternate_rounded, size: 60.0,),
+                          : userData['avatarUrl'] == null ? const Icon(Icons.add_photo_alternate_rounded, size: 60.0,) : const Text(""),
                     ),
                   ),
                   const SizedBox(height: 15),

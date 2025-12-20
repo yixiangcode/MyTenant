@@ -92,6 +92,16 @@ class _OwingPageState extends State<OwingPage> {
     }
   }
 
+  final Map<String, IconData> typeIcons = {
+    'Water': Icons.water_drop_rounded,
+    'Electric': Icons.bolt_rounded,
+    'Electricity': Icons.bolt_rounded,
+    'Internet': Icons.router_rounded,
+    'Maintenance': Icons.build_circle_rounded,
+    'Rent': Icons.home_rounded,
+    'Rental': Icons.home_rounded,
+  };
+
   @override
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -173,6 +183,16 @@ class _OwingPageState extends State<OwingPage> {
                 ),
                 margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                 child: ListTile(
+                  leading: data['type'] != null && typeIcons.containsKey(data['type'])
+                      ? Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(typeIcons[data['type']], color: Colors.indigo),
+                  )
+                      : null,
                   title: Text('${data['type']} - ${data['month']} ${data['year']}'),
                   subtitle: Text('Amount: $amountText'),
                   trailing: ElevatedButton(
@@ -190,7 +210,7 @@ class _OwingPageState extends State<OwingPage> {
                       backgroundColor: Colors.indigoAccent,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Pay', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),),
+                    child: const Text('Pay', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),),
                   ),
                 ),
               );

@@ -41,7 +41,6 @@ class _AssetPageState extends State<AssetPage> {
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 10);
     if (pickedFile != null) {
-
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
@@ -74,7 +73,6 @@ class _AssetPageState extends State<AssetPage> {
       Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
 
       await storageRef.putFile(_selectedImage!);
-
       imageUrl = await storageRef.getDownloadURL();
 
       await FirebaseFirestore.instance.collection('assets').add({
@@ -97,7 +95,6 @@ class _AssetPageState extends State<AssetPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Property added successfully!')),
       );
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Upload failed: $e')),
@@ -157,21 +154,10 @@ class _AssetPageState extends State<AssetPage> {
           try {
             await FirebaseStorage.instance.refFromURL(oldImageUrl).delete();
           } catch (e) {
-            print("Error deleting old image: $e");
+            print(e);
           }
         }
       }
-
-      final assetDoc = await FirebaseFirestore.instance.collection('assets').doc(assetId).get();
-      final oldTenantId = assetDoc.get('tenantId');
-
-      /*
-      if (oldTenantId != null && oldTenantId != newTenantId) {
-        await FirebaseFirestore.instance.collection('users').doc(oldTenantId).update({
-          'landlordId': FieldValue.delete(),
-        });
-      }
-      */
 
       if (newTenantId != null) {
         await FirebaseFirestore.instance.collection('users').doc(newTenantId).update({
@@ -196,7 +182,6 @@ class _AssetPageState extends State<AssetPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Property updated successfully!')),
       );
-
     } catch (e) {
       setDialogState(() {
         _editDialogMessage = 'Update failed: ${e.toString()}';
@@ -211,12 +196,27 @@ class _AssetPageState extends State<AssetPage> {
     }
   }
 
-  void showEditDialog(
-      String assetId,
-      Map<String, dynamic> assetData,
-      String currentTenantEmail
-      ) {
+  Future<String> _getTenantEmailAndVerify(String? tenantId, String assetId) async {
+    if (tenantId == null) return '';
+    final landlordUid = FirebaseAuth.instance.currentUser?.uid;
 
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance.collection('users').doc(tenantId).get();
+      if (doc.exists) {
+        String? currentLandlordOfTenant = doc.get('landlordId');
+        if (currentLandlordOfTenant == landlordUid) {
+          return doc.get('email') ?? '';
+        }
+      }
+
+      await FirebaseFirestore.instance.collection('assets').doc(assetId).update({'tenantId': null});
+      return '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  void showEditDialog(String assetId, Map<String, dynamic> assetData, String currentTenantEmail) {
     nameCtrl.text = assetData['name'] ?? '';
     addressCtrl.text = assetData['address'] ?? '';
     rentCtrl.text = assetData['rent']?.toString() ?? '';
@@ -234,45 +234,15 @@ class _AssetPageState extends State<AssetPage> {
           future: _getLandlordTenants(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const AlertDialog(
-                content: SizedBox(
-                  height: 100,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              );
+              return const AlertDialog(content: SizedBox(height: 100, child: Center(child: CircularProgressIndicator())));
             }
-            if (snapshot.hasError || !snapshot.hasData) {
-              return AlertDialog(
-                title: const Text("Error"),
-                content: Text("Error loading tenants: ${snapshot.error ?? 'Unknown error'}"),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
-                ],
-              );
-            }
-
-            final List<Map<String, dynamic>> tenants = snapshot.data!;
-
+            final List<Map<String, dynamic>> tenants = snapshot.data ?? [];
             return StatefulBuilder(
               builder: (context, setDialogState) {
-
-                List<DropdownMenuItem<String>> dropdownItems = [];
-
-                dropdownItems.add(
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child: Text("None"),
-                  ),
-                );
-
-                for (var tenant in tenants) {
-                  dropdownItems.add(
-                    DropdownMenuItem<String>(
-                      value: tenant['id'],
-                      child: Text(tenant['email']),
-                    ),
-                  );
-                }
+                List<DropdownMenuItem<String>> dropdownItems = [
+                  const DropdownMenuItem<String>(value: null, child: Text("None")),
+                  ...tenants.map((t) => DropdownMenuItem<String>(value: t['id'], child: Text(t['email']))),
+                ];
 
                 return AlertDialog(
                   title: const Text("Edit Property"),
@@ -289,71 +259,41 @@ class _AssetPageState extends State<AssetPage> {
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(12.0),
+                              borderRadius: BorderRadius.circular(30.0),
                               image: _selectedImage == null && assetData['imageUrl'] != null
-                                  ? DecorationImage(
-                                image: NetworkImage(assetData['imageUrl']),
-                                fit: BoxFit.cover,
-                              )
+                                  ? DecorationImage(image: NetworkImage(assetData['imageUrl']), fit: BoxFit.cover)
                                   : null,
                             ),
                             alignment: Alignment.center,
                             child: _selectedImage != null
                                 ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                                : assetData['imageUrl'] == null
-                                ? const Text("Tap to Select New Image")
-                                : const Text(""),
+                                : assetData['imageUrl'] == null ? const Text("Tap to Select New Image") : const Text(""),
                           ),
                         ),
                         const SizedBox(height: 15),
-                        TextField(controller: nameCtrl, decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),),
+                        TextField(controller: nameCtrl, decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)))),
                         const SizedBox(height: 15),
-                        TextField(controller: addressCtrl, decoration: InputDecoration(labelText: "Address", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),)),
+                        TextField(controller: addressCtrl, decoration: InputDecoration(labelText: "Address", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)))),
                         const SizedBox(height: 15),
-
                         DropdownButtonFormField<String>(
-                          value: _selectedTenantId,
-                          decoration: InputDecoration(
-                            labelText: "Assigned Tenant",
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
-                          ),
+                          value: tenants.any((t) => t['id'] == _selectedTenantId) ? _selectedTenantId : null,
+                          decoration: InputDecoration(labelText: "Assigned Tenant", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0))),
                           items: dropdownItems,
-                          onChanged: (String? newValue) {
-                            setDialogState(() {
-                              _selectedTenantId = newValue;
-                            });
-                          },
+                          onChanged: (newValue) => setDialogState(() => _selectedTenantId = newValue),
                         ),
-
                         const SizedBox(height: 15),
-                        TextField(controller: rentCtrl, decoration: InputDecoration(labelText: "Monthly Rent", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),), keyboardType: TextInputType.number),
+                        TextField(controller: rentCtrl, decoration: InputDecoration(labelText: "Monthly Rent", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0))), keyboardType: TextInputType.number),
                         const SizedBox(height: 15),
-                        TextField(controller: noteCtrl, decoration: InputDecoration(labelText: "Note", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),)),
-
-                        if (_editDialogMessage.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 10),
-                            child: Text(_editDialogMessage, style: const TextStyle(color: Colors.red)),
-                          ),
+                        TextField(controller: noteCtrl, decoration: InputDecoration(labelText: "Note", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)))),
+                        if (_editDialogMessage.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 10), child: Text(_editDialogMessage, style: const TextStyle(color: Colors.red))),
                       ],
                     ),
                   ),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-
                     _isLoading
-                        ? const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                        : ElevatedButton(
-                        onPressed: () => updateAsset(
-                          assetId: assetId,
-                          oldImageUrl: assetData['imageUrl'],
-                          setDialogState: setDialogState,
-                        ),
-                        child: const Text("Save")
-                    ),
+                        ? const Padding(padding: EdgeInsets.symmetric(horizontal: 16.0), child: CircularProgressIndicator(strokeWidth: 2))
+                        : ElevatedButton(onPressed: () => updateAsset(assetId: assetId, oldImageUrl: assetData['imageUrl'], setDialogState: setDialogState), child: const Text("Save")),
                   ],
                 );
               },
@@ -361,11 +301,7 @@ class _AssetPageState extends State<AssetPage> {
           },
         );
       },
-    ).then((_) {
-      setState(() {
-        _selectedTenantId = null;
-      });
-    });
+    ).then((_) => setState(() => _selectedTenantId = null));
   }
 
   void showAddDialog() {
@@ -377,7 +313,6 @@ class _AssetPageState extends State<AssetPage> {
 
     showDialog(
       context: context,
-
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
@@ -393,173 +328,97 @@ class _AssetPageState extends State<AssetPage> {
                     child: Container(
                       height: 120,
                       width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
+                      decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(30.0)),
                       alignment: Alignment.center,
-                      child: _selectedImage != null
-                          ? Image.file(_selectedImage!, fit: BoxFit.cover)
-                          : const Icon(Icons.add_photo_alternate_rounded, size: 60.0,),
+                      child: _selectedImage != null ? Image.file(_selectedImage!, fit: BoxFit.cover) : const Icon(Icons.add_photo_alternate_rounded, size: 60.0),
                     ),
                   ),
                   const SizedBox(height: 15),
-                  TextField(controller: nameCtrl, decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),),),
+                  TextField(controller: nameCtrl, decoration: InputDecoration(labelText: "Name", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)))),
                   const SizedBox(height: 15),
-                  TextField(controller: addressCtrl, decoration: InputDecoration(labelText: "Address", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),)),
+                  TextField(controller: addressCtrl, decoration: InputDecoration(labelText: "Address", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)))),
                   const SizedBox(height: 15),
-                  TextField(controller: rentCtrl, decoration: InputDecoration(labelText: "Monthly Rent", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),), keyboardType: TextInputType.number),
+                  TextField(controller: rentCtrl, decoration: InputDecoration(labelText: "Monthly Rent", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0))), keyboardType: TextInputType.number),
                   const SizedBox(height: 15),
-                  TextField(controller: noteCtrl, decoration: InputDecoration(labelText: "Note", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0),),)),
+                  TextField(controller: noteCtrl, decoration: InputDecoration(labelText: "Note", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)))),
                 ],
               ),
             ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-
               _isLoading
-                  ? const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+                  ? const Padding(padding: EdgeInsets.symmetric(horizontal: 16.0), child: CircularProgressIndicator(strokeWidth: 2))
                   : ElevatedButton(onPressed: addAsset, child: const Text("Add")),
             ],
           );
         },
       ),
-    ).then((_) {
-
-      setState(() {
-        _selectedImage = null;
-      });
-    });
-  }
-
-  Future<String> _getTenantEmail(String? tenantId) async {
-    if (tenantId == null) return '';
-    try {
-      DocumentSnapshot doc = await FirebaseFirestore.instance.collection('users').doc(tenantId).get();
-      return doc.exists ? doc.get('email') ?? '' : '';
-    } catch (e) {
-      print("Error fetching tenant email: $e");
-      return '';
-    }
+    ).then((_) => setState(() => _selectedImage = null));
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final uid = user?.uid;
-
-    if (uid == null) {
-      return const Scaffold(body: Center(child: Text('Please log in.')));
-    }
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const Scaffold(body: Center(child: Text('Please log in.')));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Assets', style: TextStyle(color: Colors.white)),
-        centerTitle: true,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: showAddDialog,
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
-
+      appBar: AppBar(title: const Text('Assets', style: TextStyle(color: Colors.white)), centerTitle: true, backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+      floatingActionButton: FloatingActionButton(onPressed: showAddDialog, backgroundColor: Colors.indigo, foregroundColor: Colors.white, child: const Icon(Icons.add)),
       backgroundColor: Colors.purple[50],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('assets').where('landlordId', isEqualTo: uid).orderBy('createdAt', descending: true).snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
+            if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
 
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('assets')
-            .where('landlordId', isEqualTo: uid)
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+            final assets = snapshot.data!.docs;
+            if (assets.isEmpty) return const Center(child: Text("No properties found."));
 
-          final assets = snapshot.data!.docs;
-          if (assets.isEmpty) return const Center(child: Text("No properties found."));
+            return ListView.builder(
+              itemCount: assets.length,
+              itemBuilder: (context, index) {
+                final assetDoc = assets[index];
+                final assetId = assetDoc.id;
+                final asset = assetDoc.data() as Map<String, dynamic>;
+                final String imageUrl = asset['imageUrl'] as String? ?? '';
+                final String? tenantId = asset['tenantId'] as String?;
 
-          return ListView.builder(
-            itemCount: assets.length,
-            itemBuilder: (context, index) {
-              final assetDoc = assets[index];
-              final assetId = assetDoc.id;
-              final asset = assetDoc.data() as Map<String, dynamic>;
-              final String imageUrl = asset['imageUrl'] as String? ?? '';
-              final String? tenantId = asset['tenantId'] as String?;
+                return FutureBuilder<String>(
+                  future: _getTenantEmailAndVerify(tenantId, assetId),
+                  builder: (context, emailSnapshot) {
+                    final tenantEmail = emailSnapshot.data ?? '';
+                    final tenantInfo = (tenantId != null && tenantEmail.isNotEmpty) ? "Tenant: $tenantEmail" : "Tenant: None";
 
-              return FutureBuilder<String>(
-                future: _getTenantEmail(tenantId),
-                builder: (context, emailSnapshot) {
-                  final tenantEmail = emailSnapshot.data ?? 'N/A';
-                  final tenantInfo = tenantId != null
-                      ? "Tenant: ${emailSnapshot.data ?? 'Loading...'}"
-                      : "Tenant: None";
-
-                  return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                    ),
-                    elevation: 3.0,
-                    child: ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0),
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+                      elevation: 3.0,
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => FurniturePage(assetId: assetId, assetName: asset['name']))),
+                        leading: imageUrl.isNotEmpty
+                            ? ClipRRect(borderRadius: BorderRadius.circular(12.0), child: Image.network(imageUrl, width: 60, height: 60, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40)))
+                            : Image.asset('images/logo.png', height: 40),
+                        title: Text(asset['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text("${asset['address']}\nRent: RM ${asset['rent']}\n$tenantInfo"),
+                        isThreeLine: true,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(icon: const Icon(Icons.receipt_long, color: Colors.indigo), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => BillPage(assetId: assetId, assetName: asset['name'])))),
+                            IconButton(icon: const Icon(Icons.edit, color: Colors.indigo), onPressed: () => showEditDialog(assetId, asset, tenantEmail)),
+                          ],
+                        ),
                       ),
-
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FurniturePage(
-                              assetId: assetId,
-                              assetName: asset['name'],
-                            ),
-                          ),
-                        );
-                      },
-                      leading: imageUrl.isNotEmpty
-                          ? ClipRRect(borderRadius: BorderRadius.circular(12.0), child: Image.network(imageUrl, width: 60, height: 60, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40),))
-                          : Image.asset('images/logo.png', height: 40),
-
-                      title: Text(asset['name'], style: TextStyle(fontWeight: FontWeight.bold),),
-                      subtitle: Text("${asset['address']}\nRent: RM ${asset['rent']}\n$tenantInfo"),
-                      isThreeLine: true,
-
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.receipt_long, color: Colors.indigo),
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => BillPage(
-                                  assetId: assetId,
-                                  assetName: asset['name'],
-                                ),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.indigo),
-                            onPressed: () => showEditDialog(assetId, asset, tenantEmail),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

@@ -120,7 +120,7 @@ class DocumentPage extends StatelessWidget {
                                   children: [
                                     if(icImageUrl.isEmpty)
                                       IconButton(
-                                        icon: Icon(Icons.add_a_photo_rounded),
+                                        icon: Icon(Icons.add_circle_rounded),
                                         color: Colors.deepPurple,
                                         onPressed: () {
                                           Navigator.pushReplacement(
@@ -236,7 +236,7 @@ class DocumentPage extends StatelessWidget {
                                   children: [
                                     if(contractImageUrl.isEmpty)
                                       IconButton(
-                                        icon: Icon(Icons.add_a_photo_rounded),
+                                        icon: Icon(Icons.add_circle_rounded),
                                         color: Colors.deepPurple,
                                         onPressed: () {
                                           Navigator.push(
@@ -379,7 +379,7 @@ class DocumentPage extends StatelessWidget {
                                         leading: Icon(Icons.receipt_long_rounded, color: Colors.deepPurple),
                                         title: Text("Utility Bills (${bills.length})", style: TextStyle(fontWeight: FontWeight.bold)),
                                         trailing: IconButton(
-                                          icon: Icon(Icons.add_rounded, color: Colors.deepPurple),
+                                          icon: Icon(Icons.add_circle_rounded, color: Colors.deepPurple),
                                           onPressed: () {
                                             Navigator.push(context, MaterialPageRoute(builder: (_) => ScannerPage()));
                                           },

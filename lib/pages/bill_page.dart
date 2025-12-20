@@ -5,11 +5,21 @@ class BillPage extends StatelessWidget {
   final String assetId;
   final String assetName;
 
-  const BillPage({
+  BillPage({
     super.key,
     required this.assetId,
     required this.assetName,
   });
+
+  final Map<String, IconData> typeIcons = {
+    'Water': Icons.water_drop_rounded,
+    'Electric': Icons.bolt_rounded,
+    'Electricity': Icons.bolt_rounded,
+    'Internet': Icons.router_rounded,
+    'Maintenance': Icons.build_circle_rounded,
+    'Rent': Icons.home_rounded,
+    'Rental': Icons.home_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +52,7 @@ class BillPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final bill = bills[index].data() as Map<String, dynamic>;
               final billType = bill['type'] ?? 'Utility Bill';
-              final billTitle = "$billType (${bill['month'] ?? 'N/A'} ${bill['year'] ?? ''})";
+              final billTitle = "$billType Bill (${bill['month'] ?? 'N/A'} ${bill['year'] ?? ''})";
 
               return Card(
                 shape: RoundedRectangleBorder(
@@ -53,10 +63,49 @@ class BillPage extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.0),
                   ),
+                  leading: bill['type'] != null && typeIcons.containsKey(bill['type'])
+                      ? Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(typeIcons[bill['type']], color: Colors.indigo),
+                  )
+                      : null,
                   title: Text(billTitle),
-                  subtitle: Text("Amount: ${bill['amount'] ?? 'N/A'}"),
+                  subtitle: Text("Amount: RM ${bill['amount'] ?? 'N/A'}"),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: (){},
+                  onTap: () {
+                    if (bill['imageUrl'].isNotEmpty) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          content: Image.network(
+                            bill['imageUrl'],
+                            fit: BoxFit.contain,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return SizedBox(
+                                height: 300,
+                                child: Center(child: CircularProgressIndicator()),
+                              );
+                            },
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Close'),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No image recorded for this bill.')),
+                      );
+                    }
+                  },
                 ),
               );
             },

@@ -54,11 +54,13 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
       if (assetQuery.docs.isNotEmpty) {
         final doc = assetQuery.docs.first;
+        final data = doc.data();
         if (mounted) {
           setState(() {
             _tenantAsset = {
               'assetId': doc.id,
-              'assetName': doc['name'] as String? ?? 'Your Property',
+              'assetName': data['name'] as String? ?? 'Your Property',
+              'landlordId': data['landlordId'] as String? ?? '',
             };
           });
         }
@@ -92,7 +94,12 @@ class _MaintenancePageState extends State<MaintenancePage> {
   Future<Position> _getLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      throw Exception("Location services are disabled.");
+      await Geolocator.openLocationSettings();
+
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception("Location services are disabled.");
+      }
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
@@ -140,15 +147,6 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
     if (image == null) return;
 
-    /*
-    if (_tenantAsset == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot scan: No property assigned.')),
-      );
-      return;
-    }
-    */
-
     setState(() {
       pickedImage = File(image!.path);
       result = "Loading...";
@@ -167,7 +165,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
     final options = LocalLabelerOptions(
       modelPath: modelPath,
-      confidenceThreshold: 0.2,
+      confidenceThreshold: 0.4,
     );
 
 
@@ -208,6 +206,8 @@ class _MaintenancePageState extends State<MaintenancePage> {
         }
 
         final assetId = _tenantAsset?['assetId'];
+        final assetName = _tenantAsset?['assetName'];
+        final landlordId = _tenantAsset?['landlordId'];
 
         return Scaffold(
           appBar: AppBar(
@@ -262,7 +262,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
                                   ),
-                                  margin: const EdgeInsets.all(25),
+                                  margin: const EdgeInsets.all(15),
                                   elevation: 8.0,
                                 ),
                               );
@@ -354,76 +354,46 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
                 const SizedBox(height: 16.0,),
 
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : () async {
-                    if(result == ''){
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text(
-                            "Please scan an asset first.",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          backgroundColor: Colors.indigoAccent,
-                          duration: const Duration(seconds: 2),
+                if (pickedImage != null || result.isNotEmpty)
+                  ElevatedButton.icon(
+                    onPressed: _isLoading ? null : () async {
+                      setState(() {
+                        _isLoading = true;
+                      });
 
-                          action: SnackBarAction(
-                            label: 'Scan',
-                            textColor: Colors.indigo,
-                            backgroundColor: Colors.white,
-                            onPressed: () {
-                              source = "Camera";
-                              detectObject();
-                            },
-                          ),
+                      try {
+                        String keyword = getRepairKeyword(result);
+                        List<dynamic> shops = await searchNearbyRepairShops(keyword);
 
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          margin: const EdgeInsets.all(25),
-                          elevation: 8.0,
-                        ),
-                      );
-                      return;
-                    }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ProfessionalPage(shops: shops)),
+                        );
 
-                    setState(() {
-                      _isLoading = true;
-                    });
-
-                    try {
-                      String keyword = getRepairKeyword(result);
-                      List<dynamic> shops = await searchNearbyRepairShops(keyword);
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ProfessionalPage(shops: shops)),
-                      );
-
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Error finding repair shops: $e")),
-                      );
-                    } finally {
-                      if (mounted) {
-                        setState(() {
-                          _isLoading = false;
-                        });
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Error finding repair shops: $e")),
+                        );
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        }
                       }
-                    }
-                  },
-                  icon: _isLoading
-                      ? const SizedBox(width: 25, height: 25, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
-                      : const Icon(Icons.location_on_rounded, color: Colors.indigo,size: 30.0,),
-                  label: const Text('Search Professionals',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                    },
+                    icon: _isLoading
+                        ? const SizedBox(width: 25, height: 25, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
+                        : const Icon(Icons.location_on_rounded, color: Colors.indigo,size: 30.0,),
+                    label: const Text('Search Professionals',style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      foregroundColor: Colors.black,
                     ),
-                    foregroundColor: Colors.black,
                   ),
-                ),
 
                 const SizedBox(height: 20.0,),
 
@@ -450,7 +420,6 @@ class _MaintenancePageState extends State<MaintenancePage> {
                     ),
                   ),
 
-                // asserId != null then show furniture list
                 if (assetId != null) ...[
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -461,7 +430,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                   ),
                   SizedBox(
                     height: 300,
-                    child: FurnitureMaintenanceList(assetId: assetId),
+                    child: FurnitureMaintenanceList(assetId: assetId, assetName: assetName!, landlordId: landlordId!),
                   ),
                 ] else ...[
                   const Padding(
@@ -473,7 +442,6 @@ class _MaintenancePageState extends State<MaintenancePage> {
                     ),
                   ),
                 ]
-                // --- 结束条件判断 ---
               ],
             ),
           ),
@@ -485,8 +453,10 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
 class FurnitureMaintenanceList extends StatelessWidget {
   final String assetId;
+  final String assetName;
+  final String landlordId;
 
-  const FurnitureMaintenanceList({super.key, required this.assetId});
+  const FurnitureMaintenanceList({super.key, required this.assetId, required this.assetName, required this.landlordId});
 
   @override
   Widget build(BuildContext context) {
@@ -546,12 +516,12 @@ class FurnitureMaintenanceList extends StatelessWidget {
                           .collection('maintenance_requests')
                           .add({
                         'assetId': assetId,
-                        'assetName': 'IEB 407',
+                        'assetName': assetName,
                         'furnitureName': itemName,
                         'issueType': 'furniture',
                         'imageUrl': imageUrl,
                         'tenantId': FirebaseAuth.instance.currentUser!.uid,
-                        'landlordId': item['landlordId'],
+                        'landlordId': landlordId,
                         'status': 'pending',
                         'createdAt': FieldValue.serverTimestamp(),
                       });
