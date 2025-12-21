@@ -34,7 +34,8 @@ class TenantPage extends StatelessWidget {
               child: Image(image: AssetImage('images/logo_white.png'), height: 40),
             ),
             const SizedBox(width: 10),
-            const Text('MyTenant', style: TextStyle(color: Colors.white, fontFamily: 'Pacifico')),
+            const Text('My', style: TextStyle(color: Colors.white, fontFamily: 'Pacifico')),
+            const Text('Tenant', style: TextStyle(color: Colors.orangeAccent, fontFamily: 'Pacifico')),
           ],
         ),
         centerTitle: true,
@@ -147,82 +148,92 @@ class TenantPage extends StatelessWidget {
       ),
       */
 
-      backgroundColor: Colors.purple[50],
-
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                color: Colors.indigoAccent[100],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 6.0,
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => ProfilePage()),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(30),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Hi, $name",
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                "Upcoming Bill: RM 2000",
-                                style: TextStyle(fontSize: 16, color: Colors.indigo),
-                              ),
-                              const Text(
-                                "Due Date: 15 December 2025",
-                                style: TextStyle(fontSize: 16, color: Colors.indigo),
-                              ),
-                            ],
+      body: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.indigo,
+                Colors.cyan.shade200,
+              ],
+            )
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 2.0, 16.0, 120.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  color: Colors.indigoAccent[100],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 6.0,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ProfilePage()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(30),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Hi, $name",
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  "Upcoming Bill: RM 2200",
+                                  style: TextStyle(fontSize: 16, color: Colors.indigo),
+                                ),
+                                const Text(
+                                  "Due Date: 14 January 2026",
+                                  style: TextStyle(fontSize: 16, color: Colors.indigo),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Hero(
-                          tag: 'avatar',
-                          child: CircleAvatar(
-                            backgroundImage: NetworkImage(avatarUrl),
-                            radius: 35.0,
+                          Hero(
+                            tag: 'avatar',
+                            child: CircleAvatar(
+                              backgroundImage: NetworkImage(avatarUrl),
+                              radius: 35.0,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20.0),
-              GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildGridItem(context, Icons.document_scanner_rounded, "Scan Document", () => ScannerPage()),
-                  _buildGridItem(context, Icons.description_rounded, "View Document", () => DocumentPage()),
-                  _buildGridItem(context, Icons.handyman_rounded, "Maintenance", () => MaintenancePage()),
-                  _buildGridItem(context, Icons.forum_rounded, "Chat", () => ChatPage(receiverId: landlordId, receiverName: 'Chat with Landlord',)),
-                  _buildGridItem(context, Icons.local_atm_rounded, "Owing Records", () => OwingPage()),
-                  _buildGridItem(context, Icons.notifications_rounded, "Notification", () => NotificationPage()),
-                ],
-              ),
-            ],
+                const SizedBox(height: 20.0),
+                GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildGridItem(context, Icons.document_scanner_rounded, "Scan Document", () => ScannerPage()),
+                    _buildGridItem(context, Icons.description_rounded, "View Document", () => DocumentPage()),
+                    _buildGridItem(context, Icons.handyman_rounded, "Maintenance", () => MaintenancePage()),
+                    _buildGridItem(context, Icons.forum_rounded, "Chat", () => ChatPage(receiverId: landlordId, receiverName: 'Chat with Landlord',)),
+                    _buildGridItem(context, Icons.local_atm_rounded, "Owing Records", () => OwingPage()),
+                    _buildGridItem(context, Icons.notifications_rounded, "Notification", () => NotificationPage()),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -28,14 +28,13 @@ class _ProfilePageState extends State<ProfilePage> {
     icCtrl.dispose();
     emailCtrl.dispose();
     phoneCtrl.dispose();
+    addressCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 10,
-    );
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 10,);
+
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
@@ -224,18 +223,61 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<Map<String, dynamic>?> getUserInformation(String? uid) async {
+    DocumentSnapshot userInfo = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+    return userInfo.data() as Map<String, dynamic>?;
+  }
+
+  Future<Map<String, dynamic>?> getAssetInformation(String? uid) async {
+    QuerySnapshot assetQuery = await FirebaseFirestore.instance
+        .collection('assets')
+        .where('tenantId', isEqualTo: uid)
+        .limit(1)
+        .get();
+
+    if (assetQuery.docs.isNotEmpty) {
+      return assetQuery.docs.first.data() as Map<String, dynamic>?;
+    }
+
+    return null;
+  }
+
+  Future<Map<String, dynamic>> getAllData(String? uid) async {
+    final results = await Future.wait([
+      getUserInformation(uid),
+      getAssetInformation(uid),
+    ]);
+
+    Map<String, dynamic>? userData = results[0];
+    Map<String, dynamic>? assetData = results[1];
+    String? landlordName;
+
+    if (userData != null && userData['landlordId'] != null) {
+      DocumentSnapshot landlordDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userData['landlordId'])
+          .get();
+
+      if (landlordDoc.exists) {
+        landlordName = (landlordDoc.data() as Map<String, dynamic>)['name'];
+      }
+    }
+
+    return {
+      'user': userData,
+      'asset': assetData,
+      'landlordName': landlordName,
+    };
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final uid = user?.uid;
-
-    Future<Map<String, dynamic>?> getUserInformation() async {
-      DocumentSnapshot userInfo = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
-      return userInfo.data() as Map<String, dynamic>?;
-    }
 
     return Scaffold(
       backgroundColor: Colors.purple[50],
@@ -247,192 +289,199 @@ class _ProfilePageState extends State<ProfilePage> {
         foregroundColor: Colors.white,
       ),
 
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: FutureBuilder<Map<String, dynamic>?>(
-              future: getUserInformation(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox(
-                    width: double.infinity,
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.indigo,
+              Colors.lightBlueAccent,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: FutureBuilder<Map<String, dynamic>?>(
+                future: getAllData(uid),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(
+                      width: double.infinity,
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                    return const Text('Loading error');
+                  }
+
+                  final userData = snapshot.data!['user'] as Map<String, dynamic>;
+                  final assetData = snapshot.data!['asset'] as Map<String, dynamic>?;
+                  final landlordName = snapshot.data!['landlordName'] as String? ?? 'Unknown Landlord';
+                  final name = userData['name'] as String? ?? '-';
+                  final ic = userData['ic'] as String? ?? '-';
+                  final email = userData['email'] as String? ?? '-';
+                  final role = userData['role'] as String? ?? '-';
+                  final contactNumber = userData['contactNumber'] as String? ?? "-";
+                  final avatarUrl = userData['avatarUrl'] as String? ?? '';
+                  final address = userData['address'] as String? ?? '';
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 40.0),
+                      Hero(
+                        tag: 'avatar',
+                        child: CircleAvatar(
+                          backgroundImage: NetworkImage(avatarUrl),
+                          radius: 70.0,
+                        ),
+                      ),
+                      Text(
+                        name,
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontFamily: 'Pacifico',
+                          fontSize: 30.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      Text(
+                        role,
+                        style: TextStyle(
+                          color: Colors.orangeAccent,
+                          fontFamily: 'Source Sans Pro',
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 25.0),
+
+                      Card(
+                        margin: EdgeInsets.symmetric(horizontal: 10.0),
+                        child: ListTile(
+                          leading: Icon(Icons.account_box_rounded, color: Colors.deepPurple,),
+                          title: Text(
+                            "Name",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          trailing: Text(name, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 8.0),
+
+                      Card(
+                        margin: EdgeInsets.symmetric(horizontal: 10.0),
+                        child: ListTile(
+                          leading: Icon(Icons.badge_rounded, color: Colors.deepPurple),
+                          title: Text("IC Number", style: TextStyle(fontWeight: FontWeight.bold),),
+                          trailing: Text(ic, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 8.0),
+                      Card(
+                        margin: EdgeInsets.symmetric(horizontal: 10.0),
+                        child: ListTile(
+                          leading: Icon(Icons.mail_rounded, color: Colors.deepPurple),
+                          title: Text("Email", style: TextStyle(fontWeight: FontWeight.bold),),
+                          trailing: Text(email, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
+                        ),
+                      ),
+
+                      SizedBox(height: 8.0),
+
+                      Card(
+                        margin: EdgeInsets.symmetric(horizontal: 10.0),
+                        child: ListTile(
+                          leading: Icon(Icons.phone_rounded, color: Colors.deepPurple),
+                          title: Text("Phone", style: TextStyle(fontWeight: FontWeight.bold),),
+                          trailing: Text(contactNumber, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
+                        ),
+                      ),
+
+                      SizedBox(height: 8.0),
+
+                      Card(
+                        margin: EdgeInsets.symmetric(horizontal: 10.0),
+                        child: ListTile(
+                          leading: Icon(Icons.person_rounded, color: Colors.deepPurple),
+                          title: Text("Role", style: TextStyle(fontWeight: FontWeight.bold),),
+                          trailing: Text(role, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
+                        ),
+                      ),
+
+                      if (role == "Tenant")...[
+                        SizedBox(height: 8.0),
+                        Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: ListTile(
+                            leading: const Icon(Icons.supervised_user_circle_rounded, color: Colors.deepPurple),
+                            title: const Text("Landlord", style: TextStyle(fontWeight: FontWeight.bold)),
+                            trailing: Text(landlordName, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
+                          ),
+                        ),
+                      ],
+
+                      if (assetData != null)...[
+                        SizedBox(height: 8.0),
+                        Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: ListTile(
+                            leading: const Icon(Icons.home_work_rounded, color: Colors.deepPurple),
+                            title: const Text("Rented Property", style: TextStyle(fontWeight: FontWeight.bold)),
+                            trailing: Text(assetData['name'] ?? '-', style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
+                          ),
+                        ),
+                        SizedBox(height: 8.0),
+                        Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: ListTile(
+                            leading: const Icon(Icons.location_on_rounded, color: Colors.deepPurple),
+                            title: const Text("Property Address", style: TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text(assetData['address'] ?? '-', style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
+                          ),
+                        ),
+                      ],
+
+                      SizedBox(height: 8.0),
+
+                      Card(
+                        margin: EdgeInsets.symmetric(horizontal: 10.0),
+                        child: ListTile(
+                          leading: Icon(Icons.location_on_rounded, color: Colors.deepPurple),
+                          title: Text("Personal Address", style: TextStyle(fontWeight: FontWeight.bold),),
+                          subtitle: Text(address, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
+                        ),
+                      ),
+
+                      if (assetData == null && role == 'Tenant')...[
+                        SizedBox(height: 8.0),
+                        Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: ListTile(
+                            leading: const Icon(Icons.home_work_rounded, color: Colors.deepPurple),
+                            title: const Text("No Property Assigned", style: TextStyle(fontWeight: FontWeight.bold)),
+                            trailing: const Icon(Icons.cancel_rounded, color: Colors.red,),
+                          ),
+                        ),
+                      ],
+
+                      SizedBox(height: 40.0),
+                      ElevatedButton(onPressed: (){showEditDialog(userData);}, child: Text("Edit Profile")),
+                      SizedBox(height: 40.0),
+                    ],
                   );
-                }
-
-                if (snapshot.hasError ||
-                    !snapshot.hasData ||
-                    snapshot.data == null) {
-                  return const Text('Loading error');
-                }
-
-                final userData = snapshot.data!;
-                final name = userData['name'] as String? ?? '-';
-                final ic = userData['ic'] as String? ?? '-';
-                final email = userData['email'] as String? ?? '-';
-                final role = userData['role'] as String? ?? '-';
-                final contactNumber = userData['contactNumber'] as String? ?? "-";
-                final avatarUrl = userData['avatarUrl'] as String? ?? '';
-                final address = userData['address'] as String? ?? '';
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: 50.0),
-                    Hero(
-                      tag: 'avatar',
-                      child: CircleAvatar(
-                        backgroundImage: NetworkImage(avatarUrl),
-                        radius: 70.0,
-                      ),
-                    ),
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontFamily: 'Pacifico',
-                        fontSize: 30.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    Text(
-                      role,
-                      style: TextStyle(
-                        color: Colors.orange,
-                        fontFamily: 'Source Sans Pro',
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 30.0),
-
-                    Card(
-                      margin: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: ListTile(
-                        leading: Icon(
-                          Icons.account_box_rounded,
-                          color: Colors.deepPurple,
-                        ),
-                        title: Text(
-                          "Name",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        trailing: Text(
-                          name,
-                          style: TextStyle(
-                            color: Colors.deepPurpleAccent,
-                            fontSize: 15.0,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 8.0),
-
-                    Card(
-                      margin: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: ListTile(
-                        leading: Icon(Icons.badge_rounded, color: Colors.deepPurple),
-                        title: Text(
-                          "IC Number",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        trailing: Text(
-                          ic,
-                          style: TextStyle(
-                            color: Colors.deepPurpleAccent,
-                            fontSize: 15.0,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 8.0),
-                    Card(
-                      margin: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: ListTile(
-                        leading: Icon(Icons.mail_rounded, color: Colors.deepPurple),
-                        title: Text(
-                          "Email",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        trailing: Text(
-                          email,
-                          style: TextStyle(
-                            color: Colors.deepPurpleAccent,
-                            fontSize: 15.0,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 8.0),
-
-                    Card(
-                      margin: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: ListTile(
-                        leading: Icon(Icons.phone_rounded, color: Colors.deepPurple),
-                        title: Text(
-                          "Phone",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        trailing: Text(
-                          contactNumber,
-                          style: TextStyle(
-                            color: Colors.deepPurpleAccent,
-                            fontSize: 15.0,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 8.0),
-
-                    Card(
-                      margin: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: ListTile(
-                        leading: Icon(Icons.person_rounded, color: Colors.deepPurple),
-                        title: Text(
-                          "Role",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        trailing: Text(
-                          role,
-                          style: TextStyle(
-                            color: Colors.deepPurpleAccent,
-                            fontSize: 15.0,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 8.0),
-
-                    Card(
-                      margin: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: ListTile(
-                        leading: Icon(Icons.location_on_rounded, color: Colors.deepPurple),
-                        title: Text(
-                          "Address",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          address,
-                          style: TextStyle(
-                            color: Colors.deepPurpleAccent,
-                            fontSize: 15.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 40.0),
-                    ElevatedButton(onPressed: (){showEditDialog(userData);}, child: Text("Edit Profile")),
-                    SizedBox(height: 40.0),
-                  ],
-                );
-              },
+                },
+              ),
             ),
           ),
         ),

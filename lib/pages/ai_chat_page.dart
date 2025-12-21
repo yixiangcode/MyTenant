@@ -234,23 +234,33 @@ class _AIChatPageState extends State<AIChatPage> {
         foregroundColor: Colors.white,
       ),
 
-      backgroundColor: Colors.purple[50],
-
-      body: Column(
-        children: <Widget>[
-          Flexible(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(8.0),
-              reverse: true,
-              itemCount: _messages.length,
-              itemBuilder: (_, int index) => _buildChatMessage(_messages[index]),
+      body: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.indigo,
+                Colors.cyan.shade200,
+              ],
+            )
+        ),
+        child: Column(
+          children: <Widget>[
+            Flexible(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(8.0),
+                reverse: true,
+                itemCount: _messages.length,
+                itemBuilder: (_, int index) => _buildChatMessage(_messages[index]),
+              ),
             ),
-          ),
 
-          _buildTextComposer(),
+            _buildTextComposer(),
 
-          const SizedBox(height: 16.0),
-        ],
+            const SizedBox(height: 16.0),
+          ],
+        ),
       ),
     );
   }

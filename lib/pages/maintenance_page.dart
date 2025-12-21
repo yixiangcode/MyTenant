@@ -19,9 +19,9 @@ class MaintenancePage extends StatefulWidget {
 
 class _MaintenancePageState extends State<MaintenancePage> {
   final ImagePicker _picker = ImagePicker();
-  String result = "";
+  String result = '';
   File? pickedImage;
-  String source = "";
+  String source = '';
   final TextEditingController searchCtrl = TextEditingController();
 
   Map<String, String>? _tenantAsset;
@@ -84,11 +84,86 @@ class _MaintenancePageState extends State<MaintenancePage> {
       return "fan";
     }else if(label.contains("door_knob")){
       return "door_lock";
-    } else if (label.contains("distribution_board")) {
+    } else if (label.contains("distribution_board") || label.contains("water_heater")) {
       return "electrician";
     } else {
       return label;
     }
+  }
+
+  Map<String, List<String>> _commonIssues = {
+    "led_lamp": ["Flickering", "Not turning on", "Dim light"],
+    "fluorescent_lamp": ["Flickering", "Not turning on", "Broken starter"],
+    "lamp": ["Flickering", "Not turning on", "Broken bulb"],
+    "wall_aircond": ["Not cold", "Water leaking", "Noisy", "No power"],
+    "cassette_aircond": ["Not cold", "Water leaking", "Noisy"],
+    "wall_fan": ["Not rotating", "Noisy", "Speed too slow"],
+    "ceiling_fan": ["Wobbling", "Too slow", "Remote not working"],
+    "sink": ["Leaking pipe", "Clogged drain", "Broken tap"],
+    "flush_toilet": ["Not flushing", "Water leaking", "Broken handle"],
+    "squat_toilet": ["Clogged", "Water inlet leak", "Flushing weak"],
+    "door_knob": ["Stuck lock", "Broken handle", "Key cannot turn"],
+    "table": ["Wobbly legs", "Broken surface", "Stained"],
+    "chair": ["Wobbly", "Broken leg", "Torn cushion"],
+    "refrigerator": ["Not cooling", "Leaking water", "Noisy compressor"],
+    "water_heater": ["No hot water", "Water leak", "Trip power"],
+    "switches": ["Loose socket", "Sparking", "Not working"],
+    "distribution_board": ["Frequent tripping", "Burning smell", "No power supply"],
+    "computer": ["Cannot boot", "Blue screen", "Hardware failure"],
+    "clock": ["Stopped", "Time inaccurate", "Broken glass"],
+    "water": ["Low pressure", "Dirty water", "No water supply"],
+  };
+
+  Future<void> _showIssueReportDialog(String detectedItem) async {
+    String? selectedIssue;
+    final TextEditingController manualItemCtrl = TextEditingController();
+    final TextEditingController manualIssueCtrl = TextEditingController();
+    bool isUnknown = detectedItem == "Unknown" || detectedItem.isEmpty;
+
+    List<String> issues = _commonIssues[detectedItem.toLowerCase()] ?? ["Other"];
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(isUnknown ? "Manual Report" : "Report $detectedItem"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isUnknown)
+                TextField(controller: manualItemCtrl, decoration: const InputDecoration(labelText: "What is broken?")),
+              if (!isUnknown)
+                DropdownButtonFormField<String>(
+                  value: selectedIssue,
+                  hint: const Text("Select an issue"),
+                  items: issues.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                  onChanged: (val) => setDialogState(() => selectedIssue = val),
+                ),
+              TextField(controller: manualIssueCtrl, decoration: const InputDecoration(labelText: "Description")),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance.collection('maintenance_requests').add({
+                  'assetId': _tenantAsset?['assetId'],
+                  'assetName': _tenantAsset?['assetName'],
+                  'furnitureName': isUnknown ? manualItemCtrl.text : detectedItem,
+                  'description': isUnknown ? manualIssueCtrl.text : (selectedIssue ?? manualIssueCtrl.text),
+                  'tenantId': FirebaseAuth.instance.currentUser!.uid,
+                  'landlordId': _tenantAsset?['landlordId'],
+                  'status': 'pending',
+                  'createdAt': FieldValue.serverTimestamp(),
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Submit"),
+            )
+          ],
+        ),
+      ),
+    );
   }
 
   Future<Position> _getLocation() async {
@@ -354,7 +429,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
 
                 const SizedBox(height: 16.0,),
 
-                if (pickedImage != null || result.isNotEmpty)
+                if (pickedImage != null || result.isNotEmpty)...[
                   ElevatedButton.icon(
                     onPressed: _isLoading ? null : () async {
                       setState(() {
@@ -395,9 +470,8 @@ class _MaintenancePageState extends State<MaintenancePage> {
                     ),
                   ),
 
-                const SizedBox(height: 20.0,),
+                  const SizedBox(height: 20.0,),
 
-                if (pickedImage != null || result.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
                     child: Column(
@@ -415,10 +489,14 @@ class _MaintenancePageState extends State<MaintenancePage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
                       ],
                     ),
                   ),
+
+                  Center(child: ElevatedButton(onPressed: (){_showIssueReportDialog(result);}, child: Text("Report"))),
+                ],
+
+                const SizedBox(height: 25),
 
                 if (assetId != null) ...[
                   const Padding(

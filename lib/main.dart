@@ -72,16 +72,36 @@ class AuthWrapper extends StatelessWidget {
             builder: (context, dataSnapshot) {
               if (dataSnapshot.connectionState == ConnectionState.waiting) {
                 return Scaffold(
-                  backgroundColor: Colors.indigoAccent[200],
                   body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('images/logo_white.png', width: 850, height: 85,),
-                        const Text('MyTenant', style: TextStyle(fontFamily: 'Pacifico', fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.white),),
-                        const SizedBox(height : 30.0),
-                        const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent)),
-                      ],
+                    child: Container(
+                      decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topRight,
+                            end: Alignment.bottomLeft,
+                            colors: [
+                              Colors.purple,
+                              Colors.cyan,
+                            ],
+                          )
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset('images/logo_white.png', width: 48, height: 48,),
+                                const SizedBox(width : 20.0),
+                                const Text('My', style: TextStyle(fontFamily: 'Pacifico', fontSize: 28.0, fontWeight: FontWeight.bold, color: Colors.white),),
+                                const Text('Tenant', style: TextStyle(fontFamily: 'Pacifico', fontSize: 28.0, fontWeight: FontWeight.bold, color: Colors.orangeAccent),),
+                              ],
+                            ),
+                            const SizedBox(height : 18.0),
+                            const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent), strokeWidth: 3.0,),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 );

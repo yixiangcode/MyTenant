@@ -64,158 +64,169 @@ class RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.person_add, size: 100, color: Colors.indigo),
-              SizedBox(height: 20),
-              Text(
-                "Create a New Account",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 30),
-
-
-              TextField(
-                controller: emailCtrl,
-                decoration: InputDecoration(
-                  hintText: "Email",
-                  prefixIcon: Icon(Icons.email),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
+      body: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [
+                Colors.cyanAccent,
+                Colors.purple.shade100,
+              ],
+            )
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.person_add, size: 100, color: Colors.indigo),
+                SizedBox(height: 20),
+                Text(
+                  "Create a New Account",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-              ),
-              SizedBox(height: 16),
+                SizedBox(height: 30),
 
-              TextField(
-                controller: passCtrl,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Password",
-                  prefixIcon: Icon(Icons.lock),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
 
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: DropdownButtonFormField<String>(
-                  value: _selectedRole,
+                TextField(
+                  controller: emailCtrl,
                   decoration: InputDecoration(
-                    hintText: "Select Role: Tenant/Landlord",
-                    prefixIcon: Icon(Icons.people),
+                    hintText: "Email",
+                    prefixIcon: Icon(Icons.email),
+                    filled: true,
+                    fillColor: Colors.white,
                     contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    border: InputBorder.none,
-                  ),
-                  items: _roleOptions.map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedRole = newValue;
-                    });
-                  },
-                  validator: (value) => value == null ? 'Please select a role' : null,
-                ),
-              ),
-
-              SizedBox(height: 30),
-
-              if (errorMessage.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    errorMessage,
-                    style: const TextStyle(color: Colors.red, fontSize: 14),
-                    textAlign: TextAlign.center,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              SizedBox(height: 20),
+                SizedBox(height: 16),
 
-              // Register Button
-              ElevatedButton(
-                onPressed: () async{
-                  try{
-                    final userRegistered = await _auth.createUserWithEmailAndPassword(email: emailCtrl.text.trim(), password: passCtrl.text.trim());
-                    final uid = userRegistered.user?.uid;
+                TextField(
+                  controller: passCtrl,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: "Password",
+                    prefixIcon: Icon(Icons.lock),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
 
-                    if (uid != null){
-                      if (_selectedRole == "Tenant"){
-                        registerTenant(uid);
-                      }else if(_selectedRole == "Landlord"){
-                        registerLandlord(uid);
-                      }
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text(
-                            "Register Successfully.",
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                          backgroundColor: Colors.green,
-                          duration: const Duration(seconds: 2),
-
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          margin: const EdgeInsets.all(25),
-                          elevation: 8.0,
-                        ),
-                      );
-
-                      Navigator.pop(context);
-                    }
-                  }catch(e){
-                    setState(() {
-                      errorMessage = e.toString();
-                    });
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 60, vertical: 16),
-                  shape: RoundedRectangleBorder(
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  backgroundColor: Colors.indigo,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedRole,
+                    decoration: InputDecoration(
+                      hintText: "Select Role: Tenant/Landlord",
+                      prefixIcon: Icon(Icons.people),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      border: InputBorder.none,
+                    ),
+                    items: _roleOptions.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedRole = newValue;
+                      });
+                    },
+                    validator: (value) => value == null ? 'Please select a role' : null,
+                  ),
                 ),
-                child: Text("Register", style: TextStyle(fontSize: 16, color: Colors.white)),
-              ),
-              SizedBox(height: 20),
+
+                SizedBox(height: 30),
+
+                if (errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                SizedBox(height: 20),
+
+                // Register Button
+                ElevatedButton(
+                  onPressed: () async{
+                    try{
+                      final userRegistered = await _auth.createUserWithEmailAndPassword(email: emailCtrl.text.trim(), password: passCtrl.text.trim());
+                      final uid = userRegistered.user?.uid;
+
+                      if (uid != null){
+                        if (_selectedRole == "Tenant"){
+                          registerTenant(uid);
+                        }else if(_selectedRole == "Landlord"){
+                          registerLandlord(uid);
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              "Register Successfully.",
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: const Duration(seconds: 2),
+
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            margin: const EdgeInsets.all(15),
+                            elevation: 8.0,
+                          ),
+                        );
+
+                        Navigator.pop(context);
+                      }
+                    }catch(e){
+                      setState(() {
+                        errorMessage = e.toString();
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 60, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    backgroundColor: Colors.indigo,
+                  ),
+                  child: Text("Register", style: TextStyle(fontSize: 16, color: Colors.white)),
+                ),
+                SizedBox(height: 20),
 
 
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text(
-                  "Already have an account? Login",
-                  style: TextStyle(color: Colors.indigo, fontSize: 14),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    "Already have an account? Login",
+                    style: TextStyle(color: Colors.indigo, fontSize: 14),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

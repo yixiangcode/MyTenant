@@ -37,7 +37,8 @@ class LandlordPage extends StatelessWidget {
               height: 40,
             ),
             const SizedBox(width: 10),
-            const Text('MyTenant', style: TextStyle(color: Colors.white, fontFamily: 'Pacifico'),),
+            const Text('My', style: TextStyle(color: Colors.white, fontFamily: 'Pacifico'),),
+            const Text('Tenant', style: TextStyle(color: Colors.orangeAccent, fontFamily: 'Pacifico'),),
           ],
         ),
         centerTitle: true,
@@ -116,81 +117,93 @@ class LandlordPage extends StatelessWidget {
           ],
         ),
       ),
-      backgroundColor: Colors.purple[50],
+
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                color: Colors.indigoAccent[100],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                elevation: 8,
-                child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => ProfilePage()),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(30),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Hi, $name",
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Email: $email",
-                                style: const TextStyle(fontSize: 16, color: Colors.indigo),
-                              ),
-                              Text(
-                                "Income: RM $estimatedIncome",
-                                style: const TextStyle(fontSize: 16, color: Colors.indigo),
-                              ),
-                            ],
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.indigo,
+                Colors.lightBlueAccent,
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 2.0, 16.0, 120.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  color: Colors.indigoAccent[100],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 8,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ProfilePage()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(30),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Hi, $name",
+                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Email: $email",
+                                  style: const TextStyle(fontSize: 16, color: Colors.indigo),
+                                ),
+                                Text(
+                                  "Income: RM $estimatedIncome",
+                                  style: const TextStyle(fontSize: 16, color: Colors.indigo),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Hero(
-                          tag: 'avatar',
-                          child: CircleAvatar(
-                            backgroundImage: NetworkImage(avatarUrl),
-                            radius: 35.0,
+                          Hero(
+                            tag: 'avatar',
+                            child: CircleAvatar(
+                              backgroundImage: NetworkImage(avatarUrl),
+                              radius: 35.0,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20.0),
-              GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildGridItem(context, Icons.people_rounded, "Manage Tenants", () => ManageTenantPage()),
-                  _buildGridItem(context, Icons.home_work_rounded, "Manage Assets", () => AssetPage()),
-                  _buildGridItem(context, Icons.handyman_rounded, "Professionals", () => MaintenancePage()),
-                  _buildGridItem(context, Icons.forum_rounded, "Chat", () => ChatListPage()),
-                  _buildGridItem(context, Icons.attach_money_rounded, "Income", () => IncomePage()),
-                  _buildGridItem(context, Icons.build_circle_rounded, "Maintenance", () => LandlordMaintenancePage()),
-                ],
-              ),
-            ],
+                const SizedBox(height: 20.0),
+                GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildGridItem(context, Icons.people_rounded, "Manage Tenants", () => ManageTenantPage()),
+                    _buildGridItem(context, Icons.home_work_rounded, "Manage Assets", () => AssetPage()),
+                    _buildGridItem(context, Icons.handyman_rounded, "Professionals", () => MaintenancePage()),
+                    _buildGridItem(context, Icons.forum_rounded, "Chat", () => ChatListPage()),
+                    _buildGridItem(context, Icons.attach_money_rounded, "Income", () => IncomePage()),
+                    _buildGridItem(context, Icons.build_circle_rounded, "Maintenance", () => LandlordMaintenancePage()),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
