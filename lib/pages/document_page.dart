@@ -43,9 +43,9 @@ class DocumentPage extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
 
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+      body: Center(
+        child: SingleChildScrollView(
+          child: SafeArea(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -58,20 +58,20 @@ class DocumentPage extends StatelessWidget {
                         child: Center(child: CircularProgressIndicator()),
                       );
                     }
-
+            
                     if (snapshot.hasError ||
                         !snapshot.hasData ||
                         snapshot.data == null) {
                       return const Text('Loading error');
                     }
-
+            
                     final userData = snapshot.data!;
                     final name = userData['name'] as String? ?? '-';
                     final role = userData['role'] as String? ?? '-';
                     final avatarUrl = userData['avatarUrl'] as String? ?? '';
                     var icImageUrl = userData['icImageUrl'] as String? ?? '-';
                     var contractImageUrl = userData['contractImageUrl'] as String? ?? '-';
-
+            
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -101,7 +101,7 @@ class DocumentPage extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 30.0),
-
+            
                         Card(
                           margin: EdgeInsets.symmetric(horizontal: 10.0),
                           child: Column(
@@ -129,7 +129,7 @@ class DocumentPage extends StatelessWidget {
                                           );
                                         },
                                       ),
-
+            
                                     if(icImageUrl.isNotEmpty)...[
                                       IconButton(
                                         icon: Icon(Icons.edit_rounded),
@@ -146,26 +146,26 @@ class DocumentPage extends StatelessWidget {
                                         onPressed: () async {
                                           Reference storageRef = FirebaseStorage.instance.refFromURL(icImageUrl);
                                           await storageRef.delete();
-
+            
                                           await FirebaseFirestore.instance.collection('users').doc(uid).update({
                                             'icImageUrl': '',
                                           });
-
+            
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(content: Text('Identity Card deleted successfully!')),
                                           );
-
+            
                                           Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(builder: (_) => DocumentPage()),
                                           );
-
+            
                                         },
                                     ),]
                                   ],
                                 ),
                               ),
-
+            
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16.0,
@@ -179,12 +179,12 @@ class DocumentPage extends StatelessWidget {
                                           width: double.infinity,
                                           height: 200,
                                           fit: BoxFit.cover,
-
+            
                                           loadingBuilder: (context, child, loadingProgress) {
                                             if (loadingProgress == null) {
                                               return child;
                                             }
-
+            
                                             return SizedBox(
                                               height: 200,
                                               child: Center(
@@ -202,7 +202,7 @@ class DocumentPage extends StatelessWidget {
                                               ),
                                             );
                                           },
-
+            
                                           errorBuilder:
                                               (context, error, stackTrace) =>
                                                   const Icon(
@@ -215,9 +215,9 @@ class DocumentPage extends StatelessWidget {
                             ],
                           ),
                         ),
-
+            
                         SizedBox(height: 8.0),
-
+            
                         Card(
                           margin: EdgeInsets.symmetric(horizontal: 10.0),
                           child: Column(
@@ -245,7 +245,7 @@ class DocumentPage extends StatelessWidget {
                                           );
                                         },
                                       ),
-
+            
                                     if(contractImageUrl.isNotEmpty)...[
                                       IconButton(
                                         icon: Icon(Icons.edit_rounded),
@@ -262,26 +262,26 @@ class DocumentPage extends StatelessWidget {
                                         onPressed: () async {
                                           Reference storageRef = FirebaseStorage.instance.refFromURL(contractImageUrl);
                                           await storageRef.delete();
-
+            
                                           await FirebaseFirestore.instance.collection('users').doc(uid).update({
                                             'contractImageUrl': '',
                                           });
-
+            
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(content: Text('Contract deleted successfully!')),
                                           );
-
+            
                                           Navigator.pushReplacement(
                                             context,
                                             MaterialPageRoute(builder: (_) => DocumentPage()),
                                           );
-
+            
                                         },
                                       ),]
                                   ],
                                 ),
                               ),
-
+            
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16.0,
@@ -295,12 +295,12 @@ class DocumentPage extends StatelessWidget {
                                     width: double.infinity,
                                     height: 200,
                                     fit: BoxFit.cover,
-
+            
                                     loadingBuilder: (context, child, loadingProgress) {
                                       if (loadingProgress == null) {
                                         return child;
                                       }
-
+            
                                       return SizedBox(
                                         height: 200,
                                         child: Center(
@@ -318,7 +318,7 @@ class DocumentPage extends StatelessWidget {
                                         ),
                                       );
                                     },
-
+            
                                     errorBuilder:
                                         (context, error, stackTrace) =>
                                     const Icon(
@@ -331,18 +331,18 @@ class DocumentPage extends StatelessWidget {
                             ],
                           ),
                         ),
-
+            
                         SizedBox(height: 8.0),
-
+            
                         FutureBuilder<String?>(
                           future: _getAssetId(),
                           builder: (context, assetSnapshot) {
                             if (assetSnapshot.connectionState == ConnectionState.waiting) {
                               return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                             }
-
+            
                             final assetId = assetSnapshot.data;
-
+            
                             if (assetId == null) {
                               return Card(
                                 margin: EdgeInsets.symmetric(horizontal: 10.0),
@@ -364,13 +364,13 @@ class DocumentPage extends StatelessWidget {
                                 if (billSnapshot.connectionState == ConnectionState.waiting) {
                                   return const Center(child: CircularProgressIndicator());
                                 }
-
+            
                                 if (billSnapshot.hasError) {
                                   return Center(child: Text("Error loading bills: ${billSnapshot.error}"));
                                 }
-
+            
                                 final bills = billSnapshot.data!.docs;
-
+            
                                 return Card(
                                   margin: EdgeInsets.symmetric(horizontal: 10.0),
                                   child: Column(
@@ -386,13 +386,13 @@ class DocumentPage extends StatelessWidget {
                                         ),
                                       ),
                                       Divider(),
-
+            
                                       if (bills.isEmpty)
                                         const Padding(
                                           padding: EdgeInsets.all(16.0),
                                           child: Text("No Bills Recorded."),
                                         ),
-
+            
                                       ListView.builder(
                                         shrinkWrap: true,
                                         physics: const NeverScrollableScrollPhysics(),
@@ -401,9 +401,9 @@ class DocumentPage extends StatelessWidget {
                                           final bill = bills[index].data() as Map<String, dynamic>;
                                           final docId = bills[index].id;
                                           final billImageUrl = bill['imageUrl'] as String? ?? '';
-
+            
                                           final billTitle = "${bill['month'] ?? 'Month N/A'} ${bill['year'] ?? ''}";
-
+            
                                           return Column(
                                             children: [
                                               ListTile(
@@ -418,12 +418,12 @@ class DocumentPage extends StatelessWidget {
                                                         if (billImageUrl.isNotEmpty) {
                                                           await FirebaseStorage.instance.refFromURL(billImageUrl).delete();
                                                         }
-
+            
                                                         await FirebaseFirestore.instance
                                                             .collection('assets').doc(assetId)
                                                             .collection('bills').doc(docId)
                                                             .delete();
-
+            
                                                         ScaffoldMessenger.of(context).showSnackBar(
                                                           SnackBar(content: Text('Bill of $billTitle deleted successfully.')),
                                                         );

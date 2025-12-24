@@ -280,8 +280,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final uid = user?.uid;
 
     return Scaffold(
-      backgroundColor: Colors.purple[50],
-
       appBar: AppBar(
         title: const Text('Profile', style: TextStyle(color: Colors.white)),
         centerTitle: true,
@@ -290,19 +288,21 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
 
       body: Container(
-        decoration: const BoxDecoration(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
               Colors.indigo,
-              Colors.lightBlueAccent,
+              Colors.cyan.shade200,
             ],
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
+        child: Center(
+          child: SingleChildScrollView(
+            child: SafeArea(
               child: FutureBuilder<Map<String, dynamic>?>(
                 future: getAllData(uid),
                 builder: (context, snapshot) {
@@ -314,14 +314,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     );
                   }
-
+              
                   if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
                     return const Text('Loading error');
                   }
-
+              
                   final userData = snapshot.data!['user'] as Map<String, dynamic>;
                   final assetData = snapshot.data!['asset'] as Map<String, dynamic>?;
-                  final landlordName = snapshot.data!['landlordName'] as String? ?? 'Unknown Landlord';
+                  final landlordName = snapshot.data!['landlordName'] as String? ?? '-';
                   final name = userData['name'] as String? ?? '-';
                   final ic = userData['ic'] as String? ?? '-';
                   final email = userData['email'] as String? ?? '-';
@@ -329,7 +329,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   final contactNumber = userData['contactNumber'] as String? ?? "-";
                   final avatarUrl = userData['avatarUrl'] as String? ?? '';
                   final address = userData['address'] as String? ?? '';
-
+              
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -350,7 +350,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
+              
                       Text(
                         role,
                         style: TextStyle(
@@ -361,7 +361,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                       SizedBox(height: 25.0),
-
+              
                       Card(
                         margin: EdgeInsets.symmetric(horizontal: 10.0),
                         child: ListTile(
@@ -374,9 +374,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ),
-
+              
                       SizedBox(height: 8.0),
-
+              
                       Card(
                         margin: EdgeInsets.symmetric(horizontal: 10.0),
                         child: ListTile(
@@ -386,7 +386,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ),
-
+              
                       SizedBox(height: 8.0),
                       Card(
                         margin: EdgeInsets.symmetric(horizontal: 10.0),
@@ -396,9 +396,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           trailing: Text(email, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
                         ),
                       ),
-
+              
                       SizedBox(height: 8.0),
-
+              
                       Card(
                         margin: EdgeInsets.symmetric(horizontal: 10.0),
                         child: ListTile(
@@ -407,9 +407,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           trailing: Text(contactNumber, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
                         ),
                       ),
-
+              
                       SizedBox(height: 8.0),
-
+              
                       Card(
                         margin: EdgeInsets.symmetric(horizontal: 10.0),
                         child: ListTile(
@@ -418,7 +418,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           trailing: Text(role, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
                         ),
                       ),
-
+              
                       if (role == "Tenant")...[
                         SizedBox(height: 8.0),
                         Card(
@@ -430,7 +430,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ],
-
+              
                       if (assetData != null)...[
                         SizedBox(height: 8.0),
                         Card(
@@ -451,9 +451,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ],
-
+              
                       SizedBox(height: 8.0),
-
+              
                       Card(
                         margin: EdgeInsets.symmetric(horizontal: 10.0),
                         child: ListTile(
@@ -462,7 +462,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           subtitle: Text(address, style: TextStyle(color: Colors.deepPurpleAccent, fontSize: 15.0,),),
                         ),
                       ),
-
+              
                       if (assetData == null && role == 'Tenant')...[
                         SizedBox(height: 8.0),
                         Card(
@@ -474,7 +474,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                       ],
-
+              
                       SizedBox(height: 40.0),
                       ElevatedButton(onPressed: (){showEditDialog(userData);}, child: Text("Edit Profile")),
                       SizedBox(height: 40.0),

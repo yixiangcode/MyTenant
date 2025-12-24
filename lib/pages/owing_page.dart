@@ -40,7 +40,7 @@ Future<void> _generateSingleRentBill(String assetId) async {
     'month': month,
     'year': year,
     'paid': false,
-    'tenantId': tenantId,
+    'ownerId': tenantId,
     'createdAt': FieldValue.serverTimestamp(),
   });
 }
@@ -181,7 +181,7 @@ class _OwingPageState extends State<OwingPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(32.0),
                 ),
-                margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                margin: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 0.0),
                 child: ListTile(
                   leading: data['type'] != null && typeIcons.containsKey(data['type'])
                       ? Container(
@@ -203,7 +203,21 @@ class _OwingPageState extends State<OwingPage> {
                       });
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Payment successful')),
+                        SnackBar(
+                          content: const Text(
+                            "Payment Successful.",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
+
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          margin: const EdgeInsets.all(15),
+                          elevation: 8.0,
+                        ),
                       );
                     },
                     style: ElevatedButton.styleFrom(

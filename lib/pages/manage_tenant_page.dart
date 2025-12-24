@@ -14,19 +14,19 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
   final TextEditingController emailCtrl = TextEditingController();
   String _dialogMessage = '';
 
-  Future<void> addTenant() async {
+  Future<void> addTenant(StateSetter setDialogState) async {
     final user = FirebaseAuth.instance.currentUser;
     final landlordId = user?.uid;
     final landlordEmail = user?.email ?? 'Unknown Landlord';
 
     if (landlordId == null) {
-      setState(() { _dialogMessage = "Error: Landlord not authenticated."; });
+      setDialogState(() { _dialogMessage = "Error: Landlord not authenticated."; });
       return;
     }
 
     final tenantEmail = emailCtrl.text.trim();
     if (tenantEmail.isEmpty) {
-      setState(() { _dialogMessage = "Email cannot be empty."; });
+      setDialogState(() { _dialogMessage = "Email cannot be empty."; });
       return;
     }
 
@@ -37,7 +37,7 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
         .get();
 
     if (userQuery.docs.isEmpty) {
-      setState(() { _dialogMessage = "Error: User with this email not found in the 'users' collection."; });
+      setDialogState(() { _dialogMessage = "Error: User with this email not found in the 'users' collection."; });
       return;
     }
 
@@ -47,16 +47,16 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
     final tenantRole = tenantDoc.data()['role'];
 
     if (landlordId == tenantId) {
-      setState(() { _dialogMessage = "Error: You cannot add yourself as a tenant."; });
+      setDialogState(() { _dialogMessage = "Error: You cannot add yourself as a tenant."; });
       return;
     }
     if (tenantRole != 'Tenant') {
-      setState(() { _dialogMessage = "Error: User role is not 'Tenant'."; });
+      setDialogState(() { _dialogMessage = "Error: User role is not 'Tenant'."; });
       return;
     }
 
     if (currentLandlordId == landlordId) {
-      setState(() { _dialogMessage = "Error: This user is already managed by you."; });
+      setDialogState(() { _dialogMessage = "Error: This user is already managed by you."; });
       return;
     }
 
@@ -69,7 +69,7 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
         .get();
 
     if (existingInvite.docs.isNotEmpty) {
-      setState(() { _dialogMessage = "An invitation is already pending for this tenant."; });
+      setDialogState(() { _dialogMessage = "An invitation is already pending for this tenant."; });
       return;
     }
 
@@ -110,7 +110,7 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
         context: context,
         builder: (context) {
           return StatefulBuilder(
-              builder: (context, setState) {
+              builder: (context, setDialogState) {
                 return AlertDialog(
                   title: const Text("Add New Tenant by Email"),
                   content: SingleChildScrollView(
@@ -120,6 +120,7 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
                         TextField(
                             controller: emailCtrl,
                             keyboardType: TextInputType.emailAddress,
+                            onChanged: (_) => setDialogState(() => _dialogMessage = ""),
                             decoration: const InputDecoration(
                               labelText: "Tenant Email",
                               prefixIcon: Icon(Icons.email),
@@ -144,8 +145,8 @@ class _ManageTenantPageState extends State<ManageTenantPage> {
                     ),
                     ElevatedButton(
                         onPressed: () async {
-                          await addTenant().catchError((e) {
-                            setState(() {
+                          await addTenant(setDialogState).catchError((e) {
+                            setDialogState(() {
                               _dialogMessage = e.toString();
                             });
                           });

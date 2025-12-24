@@ -128,7 +128,7 @@ class LoginPageState extends State<LoginPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text(
-                              "Login Successfully.",
+                              "Login Successful.",
                               style: TextStyle(color: Colors.white, fontSize: 16),
                             ),
                             backgroundColor: Colors.green,

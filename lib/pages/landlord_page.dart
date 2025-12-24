@@ -18,12 +18,33 @@ class LandlordPage extends StatelessWidget {
 
   const LandlordPage({Key? key, required this.userData}) : super(key: key);
 
+  Future<double> _calculateTotalIncome(String landlordId) async {
+    double total = 0.0;
+    final assetsSnapshot = await FirebaseFirestore.instance
+        .collection('assets')
+        .where('landlordId', isEqualTo: landlordId)
+        .get();
+
+    for (var asset in assetsSnapshot.docs) {
+      final billsSnapshot = await asset.reference
+          .collection('bills')
+          .where('paid', isEqualTo: true)
+          .get();
+
+      for (var bill in billsSnapshot.docs) {
+        final amount = bill['amount'] as num? ?? 0;
+        total += amount.toDouble();
+      }
+    }
+    return total;
+  }
+
   @override
   Widget build(BuildContext context) {
     final name = userData['name'] as String? ?? 'Landlord';
     final email = userData['email'] as String? ?? '-';
     final avatarUrl = userData['avatarUrl'] as String? ?? '';
-    final estimatedIncome = '3000';
+    final landlordId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       appBar: AppBar(
@@ -120,13 +141,13 @@ class LandlordPage extends StatelessWidget {
 
       body: SingleChildScrollView(
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
                 Colors.indigo,
-                Colors.lightBlueAccent,
+                Colors.cyan.shade200,
               ],
             ),
           ),
@@ -135,55 +156,42 @@ class LandlordPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Card(
-                  color: Colors.indigoAccent[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  elevation: 8,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ProfilePage()),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(30),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Hi, $name",
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                FutureBuilder<double>(
+                  future: _calculateTotalIncome(landlordId ?? ''),
+                  builder: (context, snapshot) {
+                    double displayIncome = snapshot.data ?? 0.0;
+                    return Card(
+                      color: Colors.indigoAccent[100],
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      elevation: 8,
+                      child: InkWell(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfilePage())),
+                        borderRadius: BorderRadius.circular(30),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Hi, $name", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "Income: RM ${displayIncome.toStringAsFixed(2)}",
+                                      style: const TextStyle(fontSize: 18, color: Colors.indigo, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 4),
+                                  ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "Email: $email",
-                                  style: const TextStyle(fontSize: 16, color: Colors.indigo),
-                                ),
-                                Text(
-                                  "Income: RM $estimatedIncome",
-                                  style: const TextStyle(fontSize: 16, color: Colors.indigo),
-                                ),
-                              ],
-                            ),
+                              ),
+                              Hero(tag: 'avatar', child: CircleAvatar(backgroundImage: NetworkImage(avatarUrl), radius: 35.0)),
+                            ],
                           ),
-                          Hero(
-                            tag: 'avatar',
-                            child: CircleAvatar(
-                              backgroundImage: NetworkImage(avatarUrl),
-                              radius: 35.0,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20.0),
                 GridView.count(

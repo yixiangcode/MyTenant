@@ -167,29 +167,19 @@ class _MaintenancePageState extends State<MaintenancePage> {
   }
 
   Future<Position> _getLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      await Geolocator.openLocationSettings();
-
-      serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        throw Exception("Location services are disabled.");
-      }
-    }
-
     LocationPermission permission = await Geolocator.checkPermission();
-
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      throw Exception("Location permissions are permanently denied.");
+    try {
+      return await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high
+      );
+    } catch (e) {
+      await Geolocator.openLocationSettings();
+      throw Exception("Location services are disabled.");
     }
-
-    return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high
-    );
   }
 
 
@@ -305,6 +295,7 @@ class _MaintenancePageState extends State<MaintenancePage> {
                     Expanded(
                       child: TextField(
                         controller: searchCtrl,
+                        textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
                           hintText: "Search professionals...",
                           prefixIcon: const Icon(Icons.search_rounded),
@@ -514,7 +505,8 @@ class _MaintenancePageState extends State<MaintenancePage> {
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                     child: Text(
-                      'Note: Furniture inventory is not available because you have no assigned property.',
+                      '',
+                      //'Note: Furniture inventory is not available because you have no assigned property.',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
@@ -564,13 +556,13 @@ class FurnitureMaintenanceList extends StatelessWidget {
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0),
+                borderRadius: BorderRadius.circular(30.0),
               ),
               elevation: 3.0,
 
               child: ListTile(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
+                    borderRadius: BorderRadius.circular(30.0),
                   ),
 
                   leading: imageUrl.isNotEmpty

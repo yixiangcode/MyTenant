@@ -88,7 +88,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
       print('Could not launch $url');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('无法打开: ${url.toString()}')),
+          SnackBar(content: Text('Cannot open: ${url.toString()}')),
         );
       }
     }

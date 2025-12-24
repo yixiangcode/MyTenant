@@ -181,7 +181,7 @@ class RegisterPageState extends State<RegisterPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text(
-                              "Register Successfully.",
+                              "Register Successful.",
                               style: TextStyle(color: Colors.white, fontSize: 16),
                             ),
                             backgroundColor: Colors.green,

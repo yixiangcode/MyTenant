@@ -167,6 +167,11 @@ class _ChatPageState extends State<ChatPage> {
               bool isConnectedAsTenant = tenantSnapshot.hasData && tenantSnapshot.data!.docs.isNotEmpty;
               bool canChat = isConnected || isConnectedAsTenant;
 
+              if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
               return Column(
                 children: [
                   Expanded(child: _buildMessageList()),

@@ -72,16 +72,39 @@ class IncomePage extends StatelessWidget {
                     ),
                     margin: const EdgeInsets.all(12),
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            asset['name'],
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                          Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12.0),
+                                child: asset['imageUrl'] != null && asset['imageUrl'] != ''
+                                    ? Image.network(
+                                  asset['imageUrl'],
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                )
+                                    : Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.indigo[50],
+                                  child: const Icon(Icons.home_work, color: Colors.indigo),
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Text(
+                                  asset['name'],
+                                  style: const TextStyle(
+                                      fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Text('Total Income: RM ${total.toStringAsFixed(2)}'),
                           const Divider(),
                           ...bills.map((bill) {
